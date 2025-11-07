@@ -1,0 +1,52 @@
+# Dependencies
+node_modules/
+**/node_modules/
+
+# Build outputs
+dist/
+build/
+**/dist/
+**/build/
+
+# Environment variables
+.env
+.env.local
+.env.*.local
+**/.env
+
+# Logs
+*.log
+logs/
+**/*.log
+
+# OS files
+.DS_Store
+Thumbs.db
+*.swp
+*.swo
+*~
+
+# IDE
+.vscode/
+.idea/
+*.sublime-project
+*.sublime-workspace
+
+# Uploads (archivos subidos por usuarios)
+backend/uploads/
+**/uploads/
+
+# Database
+*.sql.backup
+*.db
+*.sqlite
+
+# Temporary files
+*.tmp
+*.temp
+.cache/
+
+# Package manager locks (opcional - algunos prefieren incluirlos)
+# package-lock.json
+# yarn.lock
+

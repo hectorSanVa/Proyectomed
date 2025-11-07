@@ -1,0 +1,238 @@
+.consulta-container {
+  width: 100%;
+}
+
+.consulta-main {
+  width: 100%;
+}
+
+.consulta-wrapper {
+  max-width: 800px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.consulta-title {
+  color: var(--unach-azul-oscuro);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.consulta-subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.busqueda-section {
+  background: var(--unach-blanco);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 2rem;
+}
+
+.busqueda-input-group {
+  display: flex;
+  gap: 1rem;
+}
+
+.folio-input {
+  flex: 1;
+  padding: 0.75rem;
+  font-size: 1.1rem;
+  border: 2px solid var(--unach-azul-oscuro);
+  border-radius: 4px;
+  text-transform: uppercase;
+}
+
+.folio-input:focus {
+  outline: none;
+  border-color: var(--unach-dorado);
+  box-shadow: 0 0 0 3px rgba(212, 176, 18, 0.2);
+}
+
+.btn-buscar {
+  background-color: var(--unach-azul-oscuro);
+  color: var(--unach-blanco);
+  padding: 0.75rem 2rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 4px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+}
+
+.btn-buscar:hover:not(:disabled) {
+  background-color: var(--unach-dorado);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+}
+
+.btn-buscar:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 4px;
+  margin-bottom: 1rem;
+  border-left: 4px solid #dc3545;
+}
+
+.resultado-section {
+  margin-top: 2rem;
+}
+
+.resultado-title {
+  color: var(--unach-azul-oscuro);
+  font-size: 1.5rem;
+  margin-bottom: 1rem;
+}
+
+.resultado-card {
+  background: var(--unach-blanco);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-bottom: 1rem;
+}
+
+.resultado-row {
+  display: grid;
+  grid-template-columns: 200px 1fr;
+  gap: 1rem;
+  margin-bottom: 1rem;
+  padding-bottom: 1rem;
+  border-bottom: 1px solid #eee;
+}
+
+.resultado-row.full-width {
+  grid-template-columns: 1fr;
+  flex-direction: column;
+}
+
+.resultado-row:last-child {
+  border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
+}
+
+.resultado-label {
+  font-weight: bold;
+  color: var(--unach-azul-oscuro);
+}
+
+.resultado-value {
+  color: #333;
+}
+
+.resultado-value.folio {
+  font-family: 'Courier New', monospace;
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--unach-azul-oscuro);
+  background: var(--unach-gris-claro);
+  padding: 0.5rem;
+  border-radius: 4px;
+  display: inline-block;
+}
+
+.resultado-value.tipo {
+  font-weight: bold;
+  color: var(--unach-dorado);
+}
+
+.resultado-value.estado {
+  padding: 0.25rem 0.75rem;
+  border-radius: 4px;
+  display: inline-block;
+  font-weight: bold;
+}
+
+.resultado-value.estado.pendiente {
+  background-color: var(--color-pendiente);
+  color: #000;
+}
+
+.resultado-value.estado.en-proceso,
+.resultado-value.estado.en-revisión {
+  background-color: var(--color-en-proceso);
+  color: var(--unach-blanco);
+}
+
+.resultado-value.estado.atendida {
+  background-color: var(--color-atendida);
+  color: var(--unach-blanco);
+}
+
+.resultado-value.estado.cerrada {
+  background-color: var(--color-cerrada);
+  color: var(--unach-blanco);
+}
+
+.resultado-description {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background: var(--unach-gris-claro);
+  border-radius: 4px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.resultado-nota {
+  background: #fff3cd;
+  border-left: 4px solid var(--unach-dorado);
+  padding: 1rem;
+  border-radius: 4px;
+  margin-top: 1rem;
+}
+
+.resultado-nota p {
+  margin: 0;
+  font-size: 0.9rem;
+  color: #856404;
+}
+
+.consulta-info {
+  background: var(--unach-blanco);
+  padding: 1.5rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  margin-top: 2rem;
+  text-align: center;
+}
+
+.consulta-info h3 {
+  color: var(--unach-azul-oscuro);
+  margin-bottom: 0.5rem;
+}
+
+.consulta-info p {
+  color: #666;
+  margin: 0;
+}
+
+@media (max-width: 768px) {
+  .busqueda-input-group {
+    flex-direction: column;
+  }
+
+  .btn-buscar {
+    width: 100%;
+  }
+
+  .resultado-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .resultado-label {
+    margin-bottom: 0.25rem;
+  }
+}
+

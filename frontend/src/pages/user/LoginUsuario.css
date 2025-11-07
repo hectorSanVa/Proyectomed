@@ -1,0 +1,122 @@
+.login-usuario-container {
+  max-width: 500px;
+  margin: 2rem auto;
+}
+
+.login-card {
+  background: var(--unach-blanco);
+  padding: 3rem;
+  border-radius: 12px;
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+}
+
+.login-card h1 {
+  color: var(--unach-azul-oscuro);
+  font-size: 2rem;
+  margin-bottom: 0.5rem;
+  text-align: center;
+}
+
+.login-subtitle {
+  text-align: center;
+  color: #666;
+  margin-bottom: 2rem;
+}
+
+.login-form {
+  margin-bottom: 1.5rem;
+}
+
+.form-group {
+  margin-bottom: 1.5rem;
+}
+
+.form-group label {
+  display: block;
+  margin-bottom: 0.5rem;
+  color: var(--unach-azul-oscuro);
+  font-weight: bold;
+}
+
+.form-group input {
+  width: 100%;
+  padding: 0.75rem;
+  border: 2px solid #ddd;
+  border-radius: 6px;
+  font-size: 1rem;
+  transition: border-color 0.3s ease;
+}
+
+.form-group input:focus {
+  outline: none;
+  border-color: var(--unach-azul-oscuro);
+  box-shadow: 0 0 0 3px rgba(25, 45, 99, 0.1);
+}
+
+.error-message {
+  background-color: #f8d7da;
+  color: #721c24;
+  padding: 1rem;
+  border-radius: 6px;
+  margin-bottom: 1rem;
+  border-left: 4px solid #dc3545;
+}
+
+.error-message p {
+  margin: 0;
+  font-size: 0.9rem;
+}
+
+.btn-login {
+  width: 100%;
+  background-color: var(--unach-azul-oscuro);
+  color: var(--unach-blanco);
+  padding: 0.875rem;
+  font-size: 1.1rem;
+  font-weight: bold;
+  border-radius: 6px;
+  cursor: pointer;
+  transition: all 0.3s ease;
+  border: none;
+}
+
+.btn-login:hover:not(:disabled) {
+  background-color: var(--unach-dorado);
+  color: var(--unach-azul-oscuro);
+  transform: translateY(-2px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.2);
+}
+
+.btn-login:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
+}
+
+.login-footer {
+  text-align: center;
+  padding-top: 1.5rem;
+  border-top: 1px solid #eee;
+}
+
+.login-footer p {
+  margin: 0.5rem 0;
+  color: #666;
+  font-size: 0.9rem;
+}
+
+.login-footer a {
+  color: var(--unach-azul-oscuro);
+  text-decoration: underline;
+}
+
+.login-footer a:hover {
+  color: var(--unach-dorado);
+}
+
+.admin-link {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+}
+
+
+

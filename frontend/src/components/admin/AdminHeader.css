@@ -1,0 +1,122 @@
+.admin-header {
+  background-color: var(--unach-azul-oscuro);
+  color: var(--unach-blanco);
+  padding: 1rem 0;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+  position: fixed;
+  top: 0;
+  left: 250px;
+  right: 0;
+  z-index: 999;
+}
+
+.admin-header-content {
+  max-width: 1400px;
+  margin: 0 auto;
+  padding: 0 1.5rem;
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 2rem;
+}
+
+.admin-header-left {
+  display: flex;
+  flex-direction: column;
+  align-items: center;
+}
+
+.header-logo-text {
+  font-size: 1.2rem;
+  font-weight: bold;
+  color: var(--unach-dorado);
+}
+
+.header-admin-text {
+  font-size: 0.8rem;
+  color: var(--unach-blanco);
+}
+
+.admin-header-center {
+  flex: 1;
+  text-align: center;
+}
+
+.header-title {
+  font-size: 1rem;
+  margin: 0;
+  color: var(--unach-dorado);
+}
+
+.header-motto {
+  font-size: 0.85rem;
+  margin: 0.25rem 0 0 0;
+  color: var(--unach-blanco);
+  font-style: italic;
+}
+
+.admin-header-right {
+  display: flex;
+  flex-direction: column;
+  align-items: flex-end;
+  gap: 0.5rem;
+}
+
+.admin-btn {
+  background-color: transparent;
+  border: 1px solid var(--unach-blanco);
+  color: var(--unach-blanco);
+  padding: 0.5rem 1rem;
+  border-radius: 4px;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  gap: 0.5rem;
+  font-size: 0.9rem;
+  transition: all 0.3s ease;
+}
+
+.admin-btn:hover {
+  background-color: var(--unach-blanco);
+  color: var(--unach-azul-oscuro);
+}
+
+.btn-icon {
+  font-size: 1rem;
+}
+
+.jubileo-badge {
+  display: flex;
+  align-items: center;
+  gap: 0.25rem;
+  font-size: 0.85rem;
+  color: var(--unach-dorado);
+}
+
+.badge-icon {
+  font-size: 1rem;
+}
+
+@media (max-width: 768px) {
+  .admin-header {
+    left: 200px;
+  }
+
+  .admin-header-content {
+    flex-direction: column;
+    gap: 0.5rem;
+    padding: 0.5rem 1rem;
+  }
+
+  .header-title {
+    font-size: 0.85rem;
+  }
+
+  .admin-header-right {
+    flex-direction: row;
+    align-items: center;
+  }
+}
+
+
+

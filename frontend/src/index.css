@@ -1,0 +1,100 @@
+/* ============================================
+   ESTILOS GLOBALES - BUZÓN DE QUEJAS Y SUGERENCIAS
+   Benemérita Universidad Autónoma de Chiapas
+   ============================================ */
+
+:root {
+  /* Colores oficiales UNACH */
+  --unach-azul-oscuro: #192d63;      /* RGB(25, 45, 99) */
+  --unach-dorado: #d4b012;            /* RGB(212, 176, 18) */
+  --unach-marron: #735920;            /* RGB(115, 89, 32) */
+  
+  /* Colores complementarios */
+  --unach-gris: #6c757d;
+  --unach-blanco: #ffffff;
+  --unach-gris-claro: #f8f9fa;
+  
+  /* Colores de estado */
+  --color-pendiente: #ffc107;
+  --color-en-proceso: #17a2b8;
+  --color-atendida: #28a745;
+  --color-cerrada: #6c757d;
+  --color-alta: #dc3545;
+  --color-media: #ffc107;
+  --color-baja: #28a745;
+  
+  /* Tipografía */
+  font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  font-synthesis: none;
+  text-rendering: optimizeLegibility;
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
+* {
+  margin: 0;
+  padding: 0;
+  box-sizing: border-box;
+}
+
+body {
+  margin: 0;
+  font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  background-color: var(--unach-gris-claro);
+  color: #333;
+  line-height: 1.6;
+}
+
+a {
+  text-decoration: none;
+  color: var(--unach-azul-oscuro);
+}
+
+a:hover {
+  color: var(--unach-dorado);
+}
+
+button {
+  font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  cursor: pointer;
+  border: none;
+  border-radius: 4px;
+  padding: 0.5rem 1rem;
+  font-size: 1rem;
+  transition: all 0.3s ease;
+}
+
+input, textarea, select {
+  font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
+  border: 1px solid #ddd;
+  border-radius: 4px;
+  padding: 0.5rem;
+  font-size: 1rem;
+}
+
+input:focus, textarea:focus, select:focus {
+  outline: none;
+  border-color: var(--unach-azul-oscuro);
+  box-shadow: 0 0 0 2px rgba(25, 45, 99, 0.2);
+}
+
+/* Utilidades */
+.container {
+  max-width: 1200px;
+  margin: 0 auto;
+  padding: 0 1rem;
+}
+
+.text-center {
+  text-align: center;
+}
+
+.mt-1 { margin-top: 0.5rem; }
+.mt-2 { margin-top: 1rem; }
+.mt-3 { margin-top: 1.5rem; }
+.mt-4 { margin-top: 2rem; }
+
+.mb-1 { margin-bottom: 0.5rem; }
+.mb-2 { margin-bottom: 1rem; }
+.mb-3 { margin-bottom: 1.5rem; }
+.mb-4 { margin-bottom: 2rem; }

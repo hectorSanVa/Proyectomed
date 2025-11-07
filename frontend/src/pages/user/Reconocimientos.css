@@ -1,0 +1,139 @@
+.reconocimientos-container {
+  max-width: 1200px;
+  margin: 0 auto;
+}
+
+.reconocimientos-container h1 {
+  color: var(--unach-azul-oscuro);
+  font-size: 2rem;
+  margin-bottom: 2rem;
+}
+
+.reconocimientos-gallery {
+  display: grid;
+  grid-template-columns: repeat(auto-fit, minmax(280px, 1fr));
+  gap: 2rem;
+  margin-bottom: 2rem;
+}
+
+.reconocimiento-card {
+  background: var(--unach-blanco);
+  padding: 2rem;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  text-align: center;
+  border-top: 4px solid var(--unach-dorado);
+  transition: transform 0.3s ease, box-shadow 0.3s ease;
+}
+
+.reconocimiento-card:hover {
+  transform: translateY(-4px);
+  box-shadow: 0 4px 12px rgba(0, 0, 0, 0.15);
+}
+
+.reconocimiento-avatar {
+  width: 100px;
+  height: 100px;
+  border-radius: 50%;
+  background: var(--unach-gris-claro);
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  margin: 0 auto 1rem;
+  color: #999;
+  font-size: 0.9rem;
+  border: 3px solid var(--unach-dorado);
+}
+
+.reconocimiento-card h3 {
+  color: var(--unach-azul-oscuro);
+  font-size: 1.3rem;
+  margin-bottom: 0.5rem;
+}
+
+.reconocimiento-rol {
+  color: #666;
+  font-size: 0.95rem;
+  margin-bottom: 1rem;
+  font-style: italic;
+}
+
+.reconocimiento-logro {
+  padding: 0.75rem 1rem;
+  border-radius: 6px;
+  font-weight: bold;
+  color: var(--unach-blanco);
+  margin-top: 1rem;
+}
+
+.logro-verde {
+  background-color: #28a745;
+}
+
+.logro-azul {
+  background-color: #17a2b8;
+}
+
+.logro-amarillo {
+  background-color: var(--unach-dorado);
+  color: var(--unach-azul-oscuro);
+}
+
+.reconocimientos-subtitle {
+  color: #666;
+  font-size: 1.1rem;
+  margin-bottom: 2rem;
+  text-align: center;
+}
+
+.reconocimiento-fecha {
+  margin-top: 1rem;
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+}
+
+.reconocimiento-folio {
+  margin-top: 0.5rem;
+  font-size: 0.8rem;
+  color: #999;
+}
+
+.loading-message,
+.error-message,
+.empty-message {
+  text-align: center;
+  padding: 3rem 2rem;
+  color: var(--unach-azul-oscuro);
+  font-size: 1.1rem;
+  background: var(--unach-blanco);
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+}
+
+.error-message {
+  color: #c82333;
+  background: #f8d7da;
+  border-left: 4px solid #c82333;
+}
+
+.empty-message {
+  color: #666;
+  background: #f8f9fa;
+  border-left: 4px solid #6c757d;
+}
+
+.reconocimiento-avatar {
+  font-weight: bold;
+  font-size: 1.5rem;
+  color: var(--unach-azul-oscuro);
+}
+
+@media (max-width: 768px) {
+  .reconocimientos-gallery {
+    grid-template-columns: 1fr;
+  }
+}
+
+
+
