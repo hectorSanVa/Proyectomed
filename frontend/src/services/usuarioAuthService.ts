@@ -1,3 +1,4 @@
+import api from './api';
 import type { UsuarioSession } from '../types';
 
 export interface UsuarioLoginResponse {
@@ -16,43 +17,31 @@ export const usuarioAuthService = {
         throw new Error('Por favor ingresa un correo electrónico válido');
       }
 
-      // Validar que sea correo institucional de UNACH
-      const correoLower = correo.toLowerCase();
-      if (!correoLower.includes('@unach.mx') && !correoLower.includes('@unach.edu.mx')) {
-        throw new Error('Por favor ingresa tu correo institucional de la UNACH (@unach.mx o @unach.edu.mx)');
+      // Llamar al backend para crear o obtener usuario
+      console.log('📡 Enviando solicitud al servidor...');
+      const response = await api.post('/usuarios/login', { correo });
+      
+      if (response.data.success) {
+        const session = response.data.session;
+        
+        // Guardar sesión en localStorage para persistencia local
+        localStorage.setItem('usuarioSession', JSON.stringify(session));
+        console.log('✅ Sesión guardada en servidor y localStorage. Usuario ID:', session.id_usuario);
+        
+        return {
+          success: true,
+          session,
+          message: response.data.message || 'Sesión iniciada correctamente',
+        };
+      } else {
+        throw new Error(response.data.error || 'Error al iniciar sesión');
       }
-
-      // Sistema completamente anónimo: NO creamos usuarios en la base de datos
-      // Solo guardamos la sesión en localStorage para mantener el estado de la aplicación
-      // Esto permite que el usuario pueda consultar sus comunicaciones usando su correo,
-      // pero sin almacenar información personal en el backend
-      console.log('✅ Validación de correo exitosa, creando sesión local (anónima)...');
-      
-      // Extraer nombre del correo (parte antes del @)
-      const nombreUsuario = correoLower.split('@')[0];
-      
-      // Crear sesión local sin guardar en base de datos
-      // id_usuario será null para mantener el anonimato total
-      const session: UsuarioSession = {
-        id_usuario: null, // No guardamos ID en BD para mantener anonimato
-        correo: correoLower,
-        nombre: nombreUsuario,
-      };
-
-      localStorage.setItem('usuarioSession', JSON.stringify(session));
-      console.log('✅ Sesión guardada en localStorage (sistema anónimo - sin registro en BD)');
-      
-      return {
-        success: true,
-        session,
-        message: 'Sesión iniciada correctamente',
-      };
     } catch (error: any) {
       console.error('❌ Error en login:', error);
       
-      // Si el error ya es un string, lanzarlo directamente
-      if (typeof error === 'string') {
-        throw new Error(error);
+      // Si es un error de axios, extraer el mensaje del servidor
+      if (error.response?.data?.error) {
+        throw new Error(error.response.data.error);
       }
       
       // Si es un Error, usar su mensaje
@@ -60,7 +49,7 @@ export const usuarioAuthService = {
         throw error;
       }
       
-      throw new Error(error.message || 'Error al iniciar sesión');
+      throw new Error(error.message || 'Error al iniciar sesión. Verifica tu conexión.');
     }
   },
 

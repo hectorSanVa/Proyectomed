@@ -67,4 +67,38 @@ export class UsuarioController {
       res.status(500).json({ error: (error as Error).message });
     }
   }
+
+  // Login de usuario: crear o obtener usuario por correo
+  static async login(req: Request, res: Response) {
+    try {
+      const { correo } = req.body;
+
+      if (!correo || !correo.includes('@')) {
+        return res.status(400).json({ error: "Correo electrónico inválido" });
+      }
+
+      // Validar que sea correo institucional de UNACH
+      const correoLower = correo.toLowerCase();
+      if (!correoLower.includes('@unach.mx') && !correoLower.includes('@unach.edu.mx')) {
+        return res.status(400).json({ error: "Por favor ingresa tu correo institucional de la UNACH (@unach.mx o @unach.edu.mx)" });
+      }
+
+      // Crear o obtener usuario por correo (se guarda en la base de datos)
+      const usuario = await UsuarioService.createOrGetByCorreo(correoLower);
+
+      // Retornar sesión con información del usuario
+      res.json({
+        success: true,
+        session: {
+          id_usuario: usuario.id_usuario,
+          correo: usuario.correo,
+          nombre: usuario.nombre || correoLower.split('@')[0],
+        },
+        message: "Sesión iniciada correctamente",
+      });
+    } catch (error: any) {
+      console.error('Error en login de usuario:', error);
+      res.status(500).json({ error: error.message || "Error al iniciar sesión" });
+    }
+  }
 }
