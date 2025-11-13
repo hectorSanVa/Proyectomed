@@ -33,6 +33,6 @@ const pool = new Pool(getDatabaseConfig());
 // Opcional: verificar conexión al iniciar
 pool.connect()
   .then(() => console.log("✅ Conexión a PostgreSQL exitosa"))
-  .catch(err => console.error("❌ Error al conectar a PostgreSQL:", err));
+  .catch((err: Error) => console.error("❌ Error al conectar a PostgreSQL:", err));
 
 export default pool;

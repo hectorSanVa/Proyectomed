@@ -23,7 +23,7 @@ export class ComunicacionDAO {
     );
     console.log(`✅ Encontradas ${result.rows.length} comunicaciones para usuario ID: ${idUsuario}`);
     if (result.rows.length > 0) {
-      result.rows.forEach((com, idx) => {
+      result.rows.forEach((com: any, idx: number) => {
         console.log(`  ${idx + 1}. Folio: ${com.folio}, Tipo: ${com.tipo}, id_usuario: ${com.id_usuario}`);
       });
     }
