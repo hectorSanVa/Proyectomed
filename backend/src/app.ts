@@ -14,6 +14,7 @@ import folioRoutes from "./routes/folioRoutes";
 import historialEstadoRoutes from "./routes/historialEstadoRoutes";
 import authRoutes from "./routes/authRoutes";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
+import { runMigrations } from "./utils/runMigrations";
 
 const app = express();
 
@@ -105,13 +106,27 @@ app.use(errorHandler as express.ErrorRequestHandler);
 
 // Puerto
 const PORT = process.env.PORT || 3000;
-app.listen(PORT, () => {
-  console.log(`Servidor corriendo en puerto ${PORT}`);
-  console.log(`API disponible en http://localhost:${PORT}`);
-  console.log(`Rutas disponibles:`);
-  console.log(`  - GET  /categorias`);
-  console.log(`  - GET  /estados`);
-  console.log(`  - GET  /comunicaciones`);
-  console.log(`  - POST /comunicaciones`);
-  console.log(`  - GET  /usuarios`);
-});
+
+// Iniciar servidor
+async function startServer() {
+  try {
+    // Ejecutar migraciones antes de iniciar el servidor
+    await runMigrations();
+    
+    app.listen(PORT, () => {
+      console.log(`Servidor corriendo en puerto ${PORT}`);
+      console.log(`API disponible en http://localhost:${PORT}`);
+      console.log(`Rutas disponibles:`);
+      console.log(`  - GET  /categorias`);
+      console.log(`  - GET  /estados`);
+      console.log(`  - GET  /comunicaciones`);
+      console.log(`  - POST /comunicaciones`);
+      console.log(`  - GET  /usuarios`);
+    });
+  } catch (error) {
+    console.error('❌ Error al iniciar el servidor:', error);
+    process.exit(1);
+  }
+}
+
+startServer();
