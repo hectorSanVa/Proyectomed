@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { MdSettings, MdSave, MdCheckCircle, MdError, MdCloud, MdDatabase, MdUpdate } from 'react-icons/md';
+import { MdSettings, MdSave, MdCheckCircle, MdError, MdCloud, MdStorage, MdUpdate } from 'react-icons/md';
 import { configuracionService } from '../../services/configuracionService';
 import type { ConfigData } from '../../types';
 import './GestionComunicaciones.css';
@@ -190,7 +190,7 @@ const Configuracion = () => {
                 {' '}{systemInfo?.version || '1.0.0'}
               </p>
               <p>
-                <strong><MdDatabase style={{ marginRight: '8px', verticalAlign: 'middle' }} />Base de Datos:</strong> 
+                <strong><MdStorage style={{ marginRight: '8px', verticalAlign: 'middle' }} />Base de Datos:</strong> 
                 {' '}{systemInfo?.database || 'PostgreSQL'}
               </p>
               <p>
