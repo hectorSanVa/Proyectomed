@@ -1,14 +1,9 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { MdSettings, MdSave, MdCheckCircle, MdError } from 'react-icons/md';
+import { MdSettings, MdSave, MdCheckCircle, MdError, MdCloud, MdDatabase, MdUpdate } from 'react-icons/md';
+import { configuracionService } from '../../services/configuracionService';
+import type { ConfigData } from '../../types';
 import './GestionComunicaciones.css';
-
-interface ConfigData {
-  nombreSistema: string;
-  emailContacto: string;
-  tiempoRespuesta: number;
-  notificacionesEmail: boolean;
-}
 
 const Configuracion = () => {
   const [config, setConfig] = useState<ConfigData>({
@@ -18,20 +13,46 @@ const Configuracion = () => {
     notificacionesEmail: true,
   });
   const [loading, setLoading] = useState(false);
+  const [loadingConfig, setLoadingConfig] = useState(true);
   const [message, setMessage] = useState<{ type: 'success' | 'error'; text: string } | null>(null);
+  const [systemInfo, setSystemInfo] = useState<{
+    version: string;
+    database: string;
+    backendUrl: string;
+    lastUpdate: string;
+  } | null>(null);
 
   useEffect(() => {
-    // Cargar configuración guardada
-    const savedConfig = localStorage.getItem('sistema_config');
-    if (savedConfig) {
-      try {
-        const parsed = JSON.parse(savedConfig);
-        setConfig(parsed);
-      } catch (error) {
-        console.error('Error al cargar configuración:', error);
-      }
-    }
+    loadConfig();
+    loadSystemInfo();
   }, []);
+
+  const loadConfig = async () => {
+    try {
+      setLoadingConfig(true);
+      const data = await configuracionService.getConfigData();
+      setConfig(data);
+    } catch (error: any) {
+      console.error('Error al cargar configuración:', error);
+      setMessage({ 
+        type: 'error', 
+        text: 'Error al cargar la configuración desde el servidor. Usando valores por defecto.' 
+      });
+      setTimeout(() => setMessage(null), 5000);
+    } finally {
+      setLoadingConfig(false);
+    }
+  };
+
+  const loadSystemInfo = () => {
+    const backendUrl = import.meta.env.VITE_API_URL || 'https://buzon-unach-backend.onrender.com';
+    setSystemInfo({
+      version: '1.0.0',
+      database: 'PostgreSQL',
+      backendUrl: backendUrl,
+      lastUpdate: new Date().toLocaleDateString('es-MX'),
+    });
+  };
 
   const handleSave = async () => {
     setLoading(true);
@@ -49,13 +70,17 @@ const Configuracion = () => {
         throw new Error('El tiempo de respuesta debe estar entre 1 y 365 días');
       }
 
-      // Guardar en localStorage (puede mejorarse con backend)
-      localStorage.setItem('sistema_config', JSON.stringify(config));
-      
-      // Simular guardado en backend (puede implementarse después)
-      await new Promise(resolve => setTimeout(resolve, 500));
+      // Guardar en el servidor
+      const updatedConfig = await configuracionService.updateConfigData(config);
+      setConfig(updatedConfig);
 
-      setMessage({ type: 'success', text: 'Configuración guardada exitosamente' });
+      setMessage({ type: 'success', text: 'Configuración guardada exitosamente en el servidor' });
+      
+      // Actualizar fecha de última actualización
+      setSystemInfo(prev => prev ? {
+        ...prev,
+        lastUpdate: new Date().toLocaleDateString('es-MX')
+      } : null);
       
       // Limpiar mensaje después de 3 segundos
       setTimeout(() => setMessage(null), 3000);
@@ -92,6 +117,7 @@ const Configuracion = () => {
                   value={config.nombreSistema}
                   onChange={(e) => setConfig({ ...config, nombreSistema: e.target.value })}
                   placeholder="Nombre del sistema"
+                  disabled={loadingConfig}
                 />
               </div>
 
@@ -102,6 +128,7 @@ const Configuracion = () => {
                   value={config.emailContacto}
                   onChange={(e) => setConfig({ ...config, emailContacto: e.target.value })}
                   placeholder="email@ejemplo.com"
+                  disabled={loadingConfig}
                 />
               </div>
 
@@ -113,6 +140,7 @@ const Configuracion = () => {
                   max="365"
                   value={config.tiempoRespuesta}
                   onChange={(e) => setConfig({ ...config, tiempoRespuesta: parseInt(e.target.value) || 10 })}
+                  disabled={loadingConfig}
                 />
                 <small>Días hábiles esperados para responder a una comunicación</small>
               </div>
@@ -123,6 +151,7 @@ const Configuracion = () => {
                     type="checkbox"
                     checked={config.notificacionesEmail}
                     onChange={(e) => setConfig({ ...config, notificacionesEmail: e.target.checked })}
+                    disabled={loadingConfig}
                   />
                   <span>Habilitar notificaciones por email</span>
                 </label>
@@ -131,30 +160,63 @@ const Configuracion = () => {
               <button 
                 className="btn-primary" 
                 onClick={handleSave}
-                disabled={loading}
+                disabled={loading || loadingConfig}
               >
                 {loading ? (
                   <>
                     <span className="spinner"></span>
-                    Guardando...
+                    Guardando en el servidor...
                   </>
                 ) : (
                   <>
                     <MdSave />
-                    Guardar Configuración
+                    Guardar Configuración en el Servidor
                   </>
                 )}
               </button>
+              {loadingConfig && (
+                <p style={{ color: '#666', fontSize: '0.9rem', marginTop: '0.5rem' }}>
+                  Cargando configuración desde el servidor...
+                </p>
+              )}
             </div>
           </div>
 
           <div className="config-section">
             <h2>Información del Sistema</h2>
             <div className="info-box">
-              <p><strong>Versión:</strong> 1.0.0</p>
-              <p><strong>Base de Datos:</strong> PostgreSQL</p>
-              <p><strong>Última actualización:</strong> {new Date().toLocaleDateString('es-MX')}</p>
-              <p><strong>Nota:</strong> La configuración se guarda localmente. Para persistencia en servidor, se requiere implementar el backend correspondiente.</p>
+              <p>
+                <strong><MdUpdate style={{ marginRight: '8px', verticalAlign: 'middle' }} />Versión:</strong> 
+                {' '}{systemInfo?.version || '1.0.0'}
+              </p>
+              <p>
+                <strong><MdDatabase style={{ marginRight: '8px', verticalAlign: 'middle' }} />Base de Datos:</strong> 
+                {' '}{systemInfo?.database || 'PostgreSQL'}
+              </p>
+              <p>
+                <strong><MdCloud style={{ marginRight: '8px', verticalAlign: 'middle' }} />Backend:</strong> 
+                {' '}
+                <a href={systemInfo?.backendUrl} target="_blank" rel="noopener noreferrer" 
+                   style={{ color: '#1976d2', textDecoration: 'none' }}>
+                  {systemInfo?.backendUrl || 'https://buzon-unach-backend.onrender.com'}
+                </a>
+              </p>
+              <p>
+                <strong>Última actualización:</strong> 
+                {' '}{systemInfo?.lastUpdate || new Date().toLocaleDateString('es-MX')}
+              </p>
+              <p style={{ 
+                marginTop: '1rem', 
+                padding: '0.75rem', 
+                background: '#e8f5e9', 
+                borderRadius: '6px', 
+                borderLeft: '4px solid #4caf50',
+                fontSize: '0.9rem',
+                color: '#2e7d32'
+              }}>
+                <strong>✅ Estado:</strong> La configuración se guarda en el servidor (base de datos PostgreSQL). 
+                Todos los cambios son persistentes y se sincronizan automáticamente.
+              </p>
             </div>
           </div>
         </div>

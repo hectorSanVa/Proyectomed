@@ -254,5 +254,56 @@ BEGIN
     END IF;
 END $$;
 
+-- =========================
+-- TABLA DE CONFIGURACIÓN DEL SISTEMA
+-- =========================
+CREATE TABLE IF NOT EXISTS configuracion (
+    id_config SERIAL PRIMARY KEY,
+    clave VARCHAR(100) UNIQUE NOT NULL,
+    valor TEXT,
+    descripcion TEXT,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    actualizado_por VARCHAR(100)
+);
+
+-- Insertar configuración por defecto
+DO $$ 
+BEGIN
+    IF NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'nombre_sistema') THEN
+        INSERT INTO configuracion (clave, valor, descripcion, actualizado_por) 
+        VALUES ('nombre_sistema', 'Buzón de Quejas, Sugerencias y Reconocimientos', 'Nombre del sistema', 'Sistema');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'email_contacto') THEN
+        INSERT INTO configuracion (clave, valor, descripcion, actualizado_por) 
+        VALUES ('email_contacto', 'quejasysugerenciasfmht@unach.mx', 'Email de contacto para comunicaciones', 'Sistema');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'tiempo_respuesta') THEN
+        INSERT INTO configuracion (clave, valor, descripcion, actualizado_por) 
+        VALUES ('tiempo_respuesta', '10', 'Tiempo de respuesta esperado en días hábiles', 'Sistema');
+    END IF;
+    IF NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'notificaciones_email') THEN
+        INSERT INTO configuracion (clave, valor, descripcion, actualizado_por) 
+        VALUES ('notificaciones_email', 'true', 'Habilitar notificaciones por email', 'Sistema');
+    END IF;
+END $$;
+
+-- =========================
+-- ACTUALIZAR TABLA DE SEGUIMIENTO
+-- =========================
+-- Cambiar fecha_actualizacion de DATE a TIMESTAMP para mejor precisión (solo si no está ya como TIMESTAMP)
+DO $$ 
+BEGIN
+    IF EXISTS (
+        SELECT 1 
+        FROM information_schema.columns 
+        WHERE table_name = 'seguimiento' 
+        AND column_name = 'fecha_actualizacion' 
+        AND data_type = 'date'
+    ) THEN
+        ALTER TABLE seguimiento 
+        ALTER COLUMN fecha_actualizacion TYPE TIMESTAMP USING fecha_actualizacion::TIMESTAMP;
+    END IF;
+END $$;
+
 -- Mensaje de confirmación
 SELECT 'Base de datos configurada correctamente en Render' AS mensaje;

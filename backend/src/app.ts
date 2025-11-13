@@ -13,37 +13,66 @@ import comisionRoutes from "./routes/comisionRoutes";
 import folioRoutes from "./routes/folioRoutes";
 import historialEstadoRoutes from "./routes/historialEstadoRoutes";
 import authRoutes from "./routes/authRoutes";
+import configuracionRoutes from "./routes/configuracionRoutes";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
 import { runMigrations } from "./utils/runMigrations";
 
 const app = express();
 
 // Configuración de CORS
-// En producción, permite múltiples orígenes si es necesario
-const allowedOrigins = process.env.FRONTEND_URL 
-  ? process.env.FRONTEND_URL.split(',') 
-  : process.env.CORS_ORIGIN 
-    ? process.env.CORS_ORIGIN.split(',')
-    : ['http://localhost:5173'];
+// Permite múltiples orígenes: localhost para desarrollo local, y frontend desplegado
+const getAllowedOrigins = () => {
+  const origins: string[] = [];
+  
+  // Siempre permitir localhost para desarrollo local
+  origins.push('http://localhost:5173');
+  origins.push('http://localhost:3000');
+  origins.push('http://127.0.0.1:5173');
+  
+  // Agregar orígenes desde variables de entorno
+  if (process.env.FRONTEND_URL) {
+    const frontendUrls = process.env.FRONTEND_URL.split(',').map(url => url.trim());
+    origins.push(...frontendUrls);
+  }
+  
+  if (process.env.CORS_ORIGIN) {
+    const corsUrls = process.env.CORS_ORIGIN.split(',').map(url => url.trim());
+    origins.push(...corsUrls);
+  }
+  
+  return origins;
+};
+
+const allowedOrigins = getAllowedOrigins();
 
 const corsOptions = {
   origin: (origin: string | undefined, callback: (err: Error | null, allow?: boolean) => void) => {
-    // En desarrollo, permitir cualquier origen
-    if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
-      return callback(null, true);
-    }
-    
     // Permitir requests sin origin (ej: Postman, mobile apps, server-to-server)
     if (!origin) {
       return callback(null, true);
     }
     
+    // En desarrollo, permitir cualquier origen
+    if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
+      return callback(null, true);
+    }
+    
     // Verificar si el origin está en la lista de permitidos
-    if (allowedOrigins.some(allowed => origin?.startsWith(allowed))) {
+    const isAllowed = allowedOrigins.some(allowed => {
+      return origin === allowed || origin.startsWith(allowed);
+    });
+    
+    if (isAllowed) {
       callback(null, true);
     } else {
       console.warn(`⚠️ CORS: Origen no permitido: ${origin}`);
-      callback(new Error('No permitido por CORS'));
+      console.warn(`⚠️ Orígenes permitidos:`, allowedOrigins);
+      // En desarrollo, permitir de todos modos
+      if (process.env.NODE_ENV !== 'production') {
+        callback(null, true);
+      } else {
+        callback(new Error('No permitido por CORS'));
+      }
     }
   },
   credentials: true,
@@ -81,6 +110,7 @@ app.use("/seguimientos", seguimientoRoutes);
 app.use("/comisiones", comisionRoutes);
 app.use("/folios", folioRoutes);
 app.use("/historial-estados", historialEstadoRoutes);
+app.use("/configuracion", configuracionRoutes);
 
 // Ruta de prueba para verificar que el servidor está funcionando
 app.get("/", (req, res) => {
@@ -122,6 +152,8 @@ async function startServer() {
       console.log(`  - GET  /comunicaciones`);
       console.log(`  - POST /comunicaciones`);
       console.log(`  - GET  /usuarios`);
+      console.log(`  - GET  /configuracion/data`);
+      console.log(`  - PUT  /configuracion/data`);
     });
   } catch (error) {
     console.error('❌ Error al iniciar el servidor:', error);

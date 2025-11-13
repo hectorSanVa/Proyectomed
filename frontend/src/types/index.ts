@@ -124,3 +124,11 @@ export interface HistorialEstado {
   notas?: string;
 }
 
+// Tipos de configuración
+export interface ConfigData {
+  nombreSistema: string;
+  emailContacto: string;
+  tiempoRespuesta: number;
+  notificacionesEmail: boolean;
+}
+

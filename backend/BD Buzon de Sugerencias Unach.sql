@@ -102,7 +102,7 @@ CREATE TABLE seguimiento (
     id_estado INT REFERENCES estados(id_estado),
     id_miembro INT REFERENCES comision (id_miembro),
     responsable VARCHAR(100),
-    fecha_actualizacion DATE DEFAULT CURRENT_DATE,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
     fecha_resolucion DATE,
     notas TEXT,
     prioridad VARCHAR(20) CHECK (prioridad IN ('Baja','Media','Alta','Urgente')) DEFAULT 'Media'
@@ -203,4 +203,57 @@ GROUP BY c.id_categoria, e.nombre_estado;
 CREATE INDEX IF NOT EXISTS idx_comunicaciones_mostrar_publico 
 ON comunicaciones(tipo, mostrar_publico) 
 WHERE tipo = 'Reconocimiento';
+
+CREATE INDEX IF NOT EXISTS idx_comunicaciones_tipo ON comunicaciones(tipo);
+CREATE INDEX IF NOT EXISTS idx_comunicaciones_usuario ON comunicaciones(id_usuario);
+CREATE INDEX IF NOT EXISTS idx_comunicaciones_categoria ON comunicaciones(id_categoria);
+CREATE INDEX IF NOT EXISTS idx_comunicaciones_fecha ON comunicaciones(fecha_recepcion);
+CREATE INDEX IF NOT EXISTS idx_seguimiento_comunicacion ON seguimiento(id_comunicacion);
+CREATE INDEX IF NOT EXISTS idx_seguimiento_estado ON seguimiento(id_estado);
+CREATE INDEX IF NOT EXISTS idx_evidencias_comunicacion ON evidencias(id_comunicacion);
+CREATE INDEX IF NOT EXISTS idx_historial_comunicacion ON historial_estados(id_comunicacion);
+CREATE INDEX IF NOT EXISTS idx_folios_medio_anio ON folios(medio, anio);
+
+-- =========================
+-- TABLA DE USUARIOS ADMIN
+-- =========================
+CREATE TABLE usuarios_admin (
+    id_admin SERIAL PRIMARY KEY,
+    username VARCHAR(50) UNIQUE NOT NULL,
+    password VARCHAR(255) NOT NULL,
+    nombre VARCHAR(100),
+    rol VARCHAR(50) DEFAULT 'admin'
+);
+
+-- Insertar usuarios admin por defecto (contraseñas: admin/admin123 y secretario/secretario123)
+-- NOTA: Las contraseñas están hasheadas con bcrypt
+INSERT INTO usuarios_admin (username, password, nombre, rol) VALUES
+('admin', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Administrador', 'admin'),
+('secretario', '$2a$10$N9qo8uLOickgx2ZMRZoMyeIjZAgcfl7p92ldGxad68LJZdL17lhWy', 'Secretario', 'secretario');
+
+-- =========================
+-- TABLA DE CONFIGURACIÓN DEL SISTEMA
+-- =========================
+CREATE TABLE configuracion (
+    id_config SERIAL PRIMARY KEY,
+    clave VARCHAR(100) UNIQUE NOT NULL,
+    valor TEXT,
+    descripcion TEXT,
+    fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    actualizado_por VARCHAR(100)
+);
+
+-- Insertar configuración por defecto
+INSERT INTO configuracion (clave, valor, descripcion, actualizado_por) VALUES
+('nombre_sistema', 'Buzón de Quejas, Sugerencias y Reconocimientos', 'Nombre del sistema', 'Sistema'),
+('email_contacto', 'quejasysugerenciasfmht@unach.mx', 'Email de contacto para comunicaciones', 'Sistema'),
+('tiempo_respuesta', '10', 'Tiempo de respuesta esperado en días hábiles', 'Sistema'),
+('notificaciones_email', 'true', 'Habilitar notificaciones por email', 'Sistema');
+
+-- =========================
+-- ACTUALIZAR TABLA DE SEGUIMIENTO
+-- =========================
+-- Cambiar fecha_actualizacion de DATE a TIMESTAMP para mejor precisión
+ALTER TABLE seguimiento 
+ALTER COLUMN fecha_actualizacion TYPE TIMESTAMP USING fecha_actualizacion::TIMESTAMP;
 

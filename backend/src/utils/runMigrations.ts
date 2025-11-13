@@ -278,6 +278,37 @@ export async function runMigrations() {
       WHERE NOT EXISTS (SELECT 1 FROM usuarios_admin WHERE username = 'secretario');
     `);
 
+    // Tabla de configuración del sistema
+    await pool.query(`
+      CREATE TABLE IF NOT EXISTS configuracion (
+        id_config SERIAL PRIMARY KEY,
+        clave VARCHAR(100) UNIQUE NOT NULL,
+        valor TEXT,
+        descripcion TEXT,
+        fecha_actualizacion TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        actualizado_por VARCHAR(100)
+      );
+    `);
+
+    // Insertar configuración por defecto
+    await pool.query(`
+      INSERT INTO configuracion (clave, valor, descripcion, actualizado_por) 
+      SELECT 'nombre_sistema', 'Buzón de Quejas, Sugerencias y Reconocimientos', 'Nombre del sistema', 'Sistema'
+      WHERE NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'nombre_sistema');
+      
+      INSERT INTO configuracion (clave, valor, descripcion, actualizado_por) 
+      SELECT 'email_contacto', 'quejasysugerenciasfmht@unach.mx', 'Email de contacto para comunicaciones', 'Sistema'
+      WHERE NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'email_contacto');
+      
+      INSERT INTO configuracion (clave, valor, descripcion, actualizado_por) 
+      SELECT 'tiempo_respuesta', '10', 'Tiempo de respuesta esperado en días hábiles', 'Sistema'
+      WHERE NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'tiempo_respuesta');
+      
+      INSERT INTO configuracion (clave, valor, descripcion, actualizado_por) 
+      SELECT 'notificaciones_email', 'true', 'Habilitar notificaciones por email', 'Sistema'
+      WHERE NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'notificaciones_email');
+    `);
+
     console.log('✅ Migraciones ejecutadas correctamente');
   } catch (error: any) {
     console.error('❌ Error al ejecutar migraciones:', error.message);
