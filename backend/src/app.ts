@@ -152,6 +152,7 @@ async function startServer() {
       console.log(`  - GET  /comunicaciones`);
       console.log(`  - POST /comunicaciones`);
       console.log(`  - GET  /usuarios`);
+      console.log(`  - POST /usuarios/login`);
       console.log(`  - GET  /configuracion/data`);
       console.log(`  - PUT  /configuracion/data`);
     });
