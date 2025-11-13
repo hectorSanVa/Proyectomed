@@ -2,8 +2,8 @@ export interface Seguimiento {
   id_seguimiento: number;
   id_comunicacion: number;
   id_estado: number;
-  id_miembro: number;
-  responsable: string;
+  id_miembro: number | null;
+  responsable: string | null;
   fecha_actualizacion: string;
   fecha_resolucion: string | null;
   notas: string;

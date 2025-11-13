@@ -1,0 +1,31 @@
+# Render Blueprint - Configuración para Despliegue en Render
+# Documentación: https://render.com/docs/blueprint-spec
+# NOTA: Este archivo debe estar en la raíz del repositorio
+
+services:
+  # Servicio Web (Backend API)
+  - type: web
+    name: buzon-unach-backend
+    env: node
+    plan: free  # Puedes cambiar a starter, standard, etc.
+    rootDir: backend  # IMPORTANTE: Si tu backend está en una subcarpeta
+    buildCommand: npm install && npm run build
+    startCommand: npm start
+    envVars:
+      - key: NODE_ENV
+        value: production
+      - key: JWT_SECRET
+        generateValue: true  # Render generará un valor aleatorio seguro
+      # Las siguientes variables se configurarán manualmente en Render Dashboard:
+      # - DATABASE_URL (se conecta automáticamente a la BD de Render si usas databaseLink)
+      # - FRONTEND_URL (URL de tu frontend desplegado)
+    # databaseLink: buzon-unach-database  # Descomentar si quieres conexión automática
+
+  # Base de Datos PostgreSQL
+  - type: pspg
+    name: buzon-unach-database
+    plan: free  # PostgreSQL gratuito (límite de 90 días, luego requiere plan de pago)
+    databaseName: buzon_sugerencias
+    user: buzon_admin
+
+

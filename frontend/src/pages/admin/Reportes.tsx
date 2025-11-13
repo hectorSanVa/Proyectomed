@@ -289,146 +289,207 @@ const Reportes = () => {
       const pageHeight = doc.internal.pageSize.getHeight();
       const margin = 15;
       let yPosition = margin;
-      const lineHeight = 7;
+      const lineHeight = 8; // Aumentado para mejor legibilidad
       const maxWidth = pageWidth - (margin * 2);
 
-      // Colores
-      const colorAzul = [25, 45, 99]; // #192d63
-      const colorDorado = [212, 175, 55]; // #d4b012
+      // Colores profesionales mejorados
+      const colorAzulOscuro = [25, 45, 99]; // #192d63 - Azul institucional
+      const colorAzulClaro = [41, 128, 185]; // #2980b9 - Azul profesional
+      const colorGrisOscuro = [44, 62, 80]; // #2c3e50 - Gris profesional
+      const colorGrisClaro = [108, 117, 125]; // #6c757d - Gris suave
+      const colorNegro = [33, 37, 41]; // #212529 - Negro suave
+      const colorBlanco = [255, 255, 255];
+      const colorVerde = [40, 167, 69]; // #28a745 - Verde para estadísticas positivas
 
-      // Header
-      doc.setFontSize(16);
-      doc.setTextColor(...colorAzul);
-      doc.setFont('helvetica', 'bold');
-      doc.text('REPORTE DEL BUZÓN DE QUEJAS, SUGERENCIAS Y RECONOCIMIENTOS', pageWidth / 2, yPosition, { align: 'center', maxWidth });
-      yPosition += lineHeight;
+      // Header con fondo destacado
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(0, 0, pageWidth, 35, 'F');
       
-      doc.setFontSize(11);
+      doc.setFontSize(18);
+      doc.setTextColor(...colorBlanco);
+      doc.setFont('helvetica', 'bold');
+      doc.text('REPORTE DEL BUZÓN DE QUEJAS, SUGERENCIAS Y RECONOCIMIENTOS', pageWidth / 2, 15, { align: 'center', maxWidth });
+      
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
-      doc.text('Facultad de Medicina Humana "Dr. Manuel Velasco Suárez" Campus IV', pageWidth / 2, yPosition, { align: 'center', maxWidth });
-      yPosition += lineHeight * 1.5;
+      doc.text('Facultad de Medicina Humana "Dr. Manuel Velasco Suárez" Campus IV', pageWidth / 2, 25, { align: 'center', maxWidth });
+      
+      yPosition = 40;
 
-      // Fecha y filtros
+      // Fecha y filtros con estilo mejorado
       const fecha = new Date().toLocaleString('es-MX');
-      doc.setFontSize(10);
-      doc.text(`Fecha de generación: ${fecha}`, margin, yPosition);
+      doc.setFontSize(12);
+      doc.setTextColor(...colorGrisOscuro);
+      doc.setFont('helvetica', 'bold');
+      doc.text('Fecha de generación:', margin, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+      doc.text(fecha, margin + 50, yPosition);
       yPosition += lineHeight;
 
       if (fechaDesde || fechaHasta) {
-        doc.text(`Período: ${fechaDesde || 'Inicio'} - ${fechaHasta || 'Hoy'}`, margin, yPosition);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorGrisOscuro);
+        doc.text('Período:', margin, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colorNegro);
+        doc.text(`${fechaDesde || 'Inicio'} - ${fechaHasta || 'Hoy'}`, margin + 30, yPosition);
         yPosition += lineHeight;
       }
 
       if (filterTipo !== 'Todos') {
-        doc.text(`Tipo: ${filterTipo}`, margin, yPosition);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorGrisOscuro);
+        doc.text('Tipo:', margin, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colorNegro);
+        doc.text(filterTipo, margin + 20, yPosition);
         yPosition += lineHeight;
       }
 
-      yPosition += lineHeight;
-
-      // Estadísticas generales
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colorAzul);
-      doc.text('ESTADÍSTICAS GENERALES', margin, yPosition);
-      yPosition += lineHeight;
-
-      doc.setFontSize(10);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(0, 0, 0);
-      doc.text(`Total de Comunicaciones: ${stats.total}`, margin + 5, yPosition);
-      yPosition += lineHeight;
-      doc.text(`Quejas: ${stats.quejas}`, margin + 5, yPosition);
-      yPosition += lineHeight;
-      doc.text(`Sugerencias: ${stats.sugerencias}`, margin + 5, yPosition);
-      yPosition += lineHeight;
-      doc.text(`Reconocimientos: ${stats.reconocimientos}`, margin + 5, yPosition);
+      yPosition += lineHeight * 0.5;
+      
+      // Línea decorativa
+      doc.setDrawColor(...colorAzulOscuro);
+      doc.setLineWidth(0.5);
+      doc.line(margin, yPosition, pageWidth - margin, yPosition);
       yPosition += lineHeight * 1.5;
 
-      // Estadísticas por categoría
-      if (stats.porCategoria.length > 0) {
-        doc.setFontSize(12);
-        doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colorAzul);
-        doc.text('ESTADÍSTICAS POR CATEGORÍA', margin, yPosition);
-        yPosition += lineHeight;
+      // Estadísticas generales con fondo destacado
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+      doc.setFontSize(14);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorBlanco);
+      doc.text('ESTADÍSTICAS GENERALES', margin + 2, yPosition);
+      yPosition += lineHeight * 2;
 
-        // Tabla de categorías
-        const tableStartY = yPosition;
-        const colWidths = [70, 25, 25, 30, 35];
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+      
+      // Total con estilo destacado
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorAzulOscuro);
+      doc.text(`Total de Comunicaciones:`, margin + 5, yPosition);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorVerde);
+      doc.text(`${stats.total}`, pageWidth - margin - 20, yPosition, { align: 'right' });
+      yPosition += lineHeight * 1.2;
+      
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+      doc.text(`• Quejas: ${stats.quejas}`, margin + 10, yPosition);
+      yPosition += lineHeight;
+      doc.text(`• Sugerencias: ${stats.sugerencias}`, margin + 10, yPosition);
+      yPosition += lineHeight;
+      doc.text(`• Reconocimientos: ${stats.reconocimientos}`, margin + 10, yPosition);
+      yPosition += lineHeight * 1.5;
+
+      // Estadísticas por categoría con fondo destacado
+      if (stats.porCategoria.length > 0) {
+        if (yPosition > pageHeight - 60) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        
+        doc.setFillColor(...colorAzulOscuro);
+        doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+        doc.setFontSize(14);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorBlanco);
+        doc.text('ESTADÍSTICAS POR CATEGORÍA', margin + 2, yPosition);
+        yPosition += lineHeight * 1.8;
+
+        // Tabla de categorías mejorada
+        const colWidths = [75, 25, 25, 30, 35];
         let xPos = margin;
 
-        // Headers
-        doc.setFontSize(9);
+        // Headers con estilo mejorado
+        doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        doc.setFillColor(...colorAzul);
+        doc.setFillColor(...colorAzulClaro);
         doc.rect(xPos, yPosition - 5, colWidths[0], 8, 'F');
-        doc.setTextColor(255, 255, 255);
-        doc.text('Categoría', xPos + 2, yPosition);
+        doc.setTextColor(...colorBlanco);
+        doc.text('Categoría', xPos + 3, yPosition);
         xPos += colWidths[0];
         
-        doc.setFillColor(...colorAzul);
+        doc.setFillColor(...colorAzulClaro);
         doc.rect(xPos, yPosition - 5, colWidths[1], 8, 'F');
-        doc.text('Total', xPos + 2, yPosition);
+        doc.text('Total', xPos + 3, yPosition);
         xPos += colWidths[1];
         
-        doc.setFillColor(...colorAzul);
+        doc.setFillColor(...colorAzulClaro);
         doc.rect(xPos, yPosition - 5, colWidths[2], 8, 'F');
-        doc.text('Quejas', xPos + 2, yPosition);
+        doc.text('Quejas', xPos + 3, yPosition);
         xPos += colWidths[2];
         
-        doc.setFillColor(...colorAzul);
+        doc.setFillColor(...colorAzulClaro);
         doc.rect(xPos, yPosition - 5, colWidths[3], 8, 'F');
-        doc.text('Sug.', xPos + 2, yPosition);
+        doc.text('Sug.', xPos + 3, yPosition);
         xPos += colWidths[3];
         
-        doc.setFillColor(...colorAzul);
+        doc.setFillColor(...colorAzulClaro);
         doc.rect(xPos, yPosition - 5, colWidths[4], 8, 'F');
-        doc.text('Recon.', xPos + 2, yPosition);
+        doc.text('Recon.', xPos + 3, yPosition);
         
-        yPosition += lineHeight * 1.2;
-        doc.setTextColor(0, 0, 0);
+        yPosition += lineHeight * 1.3;
+        doc.setFontSize(12);
+        doc.setTextColor(...colorNegro);
         doc.setFont('helvetica', 'normal');
 
-        // Datos
+        // Datos con alternancia de colores
         stats.porCategoria.forEach((stat, index) => {
           if (yPosition > pageHeight - 30) {
             doc.addPage();
             yPosition = margin;
           }
 
-          xPos = margin;
-          doc.text(stat.categoria.substring(0, 20), xPos + 2, yPosition);
-          xPos += colWidths[0];
-          doc.text(stat.total.toString(), xPos + 2, yPosition);
-          xPos += colWidths[1];
-          doc.text(stat.quejas.toString(), xPos + 2, yPosition);
-          xPos += colWidths[2];
-          doc.text(stat.sugerencias.toString(), xPos + 2, yPosition);
-          xPos += colWidths[3];
-          doc.text(stat.reconocimientos.toString(), xPos + 2, yPosition);
+          // Fondo alternado para filas
+          if (index % 2 === 0) {
+            doc.setFillColor(245, 245, 245);
+            doc.rect(margin, yPosition - 4, pageWidth - (margin * 2), lineHeight, 'F');
+          }
 
-          // Línea separadora
-          doc.setDrawColor(200, 200, 200);
-          doc.line(margin, yPosition + 2, pageWidth - margin, yPosition + 2);
-          yPosition += lineHeight * 1.2;
+          xPos = margin;
+          doc.setTextColor(...colorNegro);
+          doc.text(stat.categoria.substring(0, 25), xPos + 3, yPosition);
+          xPos += colWidths[0];
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...colorVerde);
+          doc.text(stat.total.toString(), xPos + 3, yPosition);
+          xPos += colWidths[1];
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...colorNegro);
+          doc.text(stat.quejas.toString(), xPos + 3, yPosition);
+          xPos += colWidths[2];
+          doc.text(stat.sugerencias.toString(), xPos + 3, yPosition);
+          xPos += colWidths[3];
+          doc.text(stat.reconocimientos.toString(), xPos + 3, yPosition);
+
+          // Línea separadora más sutil
+          doc.setDrawColor(220, 220, 220);
+          doc.setLineWidth(0.3);
+          doc.line(margin, yPosition + 3, pageWidth - margin, yPosition + 3);
+          yPosition += lineHeight * 1.3;
         });
 
-        yPosition += lineHeight;
+        yPosition += lineHeight * 0.5;
       }
 
-      // Detalle de comunicaciones
+      // Detalle de comunicaciones con fondo destacado
       if (yPosition > pageHeight - 40) {
         doc.addPage();
         yPosition = margin;
       }
 
-      doc.setFontSize(12);
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+      doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colorAzul);
-      doc.text('DETALLE DE COMUNICACIONES', margin, yPosition);
-      yPosition += lineHeight * 1.5;
+      doc.setTextColor(...colorBlanco);
+      doc.text('DETALLE DE COMUNICACIONES', margin + 2, yPosition);
+      yPosition += lineHeight * 1.8;
 
       // Comunicaciones (limitadas para evitar PDF muy largo)
       const comunicacionesMostrar = filtered.slice(0, 50); // Máximo 50 en el PDF
@@ -440,26 +501,89 @@ const Reportes = () => {
         }
 
         const categoria = categorias.find(c => c.id_categoria === com.id_categoria);
-        doc.setFontSize(9);
+        
+        // Guardar posición inicial para el fondo
+        const inicioY = yPosition;
+        const fechaFormateada = com.fecha_recepcion ? new Date(com.fecha_recepcion).toLocaleDateString('es-MX') : 'N/A';
+        const descripcion = (com.descripcion || 'N/A').substring(0, 200);
+        const descripcionLines = doc.splitTextToSize(descripcion + (com.descripcion && com.descripcion.length > 200 ? '...' : ''), maxWidth - 15);
+        
+        // Calcular altura total de la comunicación
+        const alturaBase = lineHeight * 1.2 + (lineHeight * 4) + (lineHeight * 0.8) + (descripcionLines.length * lineHeight * 0.9) + (lineHeight * 0.3);
+        
+        // Dibujar fondo alternado primero
+        if (index % 2 === 0) {
+          doc.setFillColor(250, 250, 250);
+          doc.rect(margin, inicioY - 3, pageWidth - (margin * 2), alturaBase, 'F');
+        }
+        
+        // Número y Folio
+        doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.text(`${index + 1}. Folio: ${com.folio || 'N/A'}`, margin, yPosition);
+        doc.setTextColor(...colorAzulOscuro);
+        doc.text(`${index + 1}.`, margin + 3, yPosition);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorGrisOscuro);
+        doc.text('Folio:', margin + 12, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colorNegro);
+        doc.text(com.folio || 'N/A', margin + 28, yPosition);
+        yPosition += lineHeight * 1.2;
+
+        // Tipo
+        doc.setFont('helvetica', 'bold');
+        doc.setFontSize(11);
+        doc.setTextColor(...colorGrisOscuro);
+        doc.text('Tipo:', margin + 3, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colorNegro);
+        doc.text(com.tipo || 'N/A', margin + 20, yPosition);
         yPosition += lineHeight;
 
+        // Categoría
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorGrisOscuro);
+        doc.text('Categoría:', margin + 3, yPosition);
         doc.setFont('helvetica', 'normal');
-        doc.text(`   Tipo: ${com.tipo || 'N/A'} | Categoría: ${categoria?.nombre_categoria || 'N/A'} | Estado: ${com.estado?.nombre_estado || 'Pendiente'}`, margin, yPosition);
+        doc.setTextColor(...colorNegro);
+        doc.text(categoria?.nombre_categoria || 'N/A', margin + 35, yPosition);
         yPosition += lineHeight;
-        doc.text(`   Fecha: ${com.fecha_recepcion ? new Date(com.fecha_recepcion).toLocaleDateString('es-MX') : 'N/A'}`, margin, yPosition);
+
+        // Estado
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorGrisOscuro);
+        doc.text('Estado:', margin + 3, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colorNegro);
+        doc.text(com.estado?.nombre_estado || 'Pendiente', margin + 28, yPosition);
+        yPosition += lineHeight;
+
+        // Fecha
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorGrisOscuro);
+        doc.text('Fecha:', margin + 3, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colorNegro);
+        doc.text(fechaFormateada, margin + 25, yPosition);
         yPosition += lineHeight;
         
-        const descripcion = (com.descripcion || 'N/A').substring(0, 100);
-        const descripcionLines = doc.splitTextToSize(`   Descripción: ${descripcion}${com.descripcion && com.descripcion.length > 100 ? '...' : ''}`, maxWidth - 10);
+        // Descripción
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorGrisOscuro);
+        doc.text('Descripción:', margin + 3, yPosition);
+        yPosition += lineHeight * 0.8;
+        
+        doc.setFont('helvetica', 'normal');
+        doc.setFontSize(10);
+        doc.setTextColor(...colorNegro);
         descripcionLines.forEach((line: string) => {
-          doc.text(line, margin, yPosition);
-          yPosition += lineHeight;
+          doc.text(line, margin + 8, yPosition);
+          yPosition += lineHeight * 0.9;
         });
 
-        yPosition += lineHeight * 0.5;
-        doc.setDrawColor(220, 220, 220);
+        yPosition += lineHeight * 0.3;
+        doc.setDrawColor(230, 230, 230);
+        doc.setLineWidth(0.3);
         doc.line(margin, yPosition, pageWidth - margin, yPosition);
         yPosition += lineHeight * 0.5;
       });
@@ -474,16 +598,23 @@ const Reportes = () => {
         doc.text(`Nota: Se muestran las primeras 50 comunicaciones de un total de ${filtered.length}`, margin, yPosition);
       }
 
-      // Footer en cada página
+      // Footer profesional en cada página
       const totalPages = doc.getNumberOfPages();
       for (let i = 1; i <= totalPages; i++) {
         doc.setPage(i);
-        doc.setFontSize(8);
-        doc.setTextColor(128, 128, 128);
+        
+        // Línea superior del footer
+        doc.setDrawColor(...colorAzulOscuro);
+        doc.setLineWidth(0.5);
+        doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
+        
+        doc.setFontSize(10);
+        doc.setTextColor(...colorGrisOscuro);
+        doc.setFont('helvetica', 'normal');
         doc.text(
           `Página ${i} de ${totalPages}`,
           pageWidth / 2,
-          pageHeight - 10,
+          pageHeight - 8,
           { align: 'center' }
         );
       }

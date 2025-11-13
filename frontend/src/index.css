@@ -4,26 +4,45 @@
    ============================================ */
 
 :root {
-  /* Colores oficiales UNACH */
+  /* Colores oficiales UNACH - Documentación de marca */
+  /* Azul Oscuro: RGB(25, 45, 99) - CMYK(100, 87, 27, 13) */
   --unach-azul-oscuro: #192d63;      /* RGB(25, 45, 99) */
+  /* Dorado/Amarillo: RGB(212, 176, 18) - CMYK(4, 19, 97, 18) */
   --unach-dorado: #d4b012;            /* RGB(212, 176, 18) */
+  /* Marrón/Dorado: RGB(115, 89, 32) - CMYK(45, 53, 100, 29) */
   --unach-marron: #735920;            /* RGB(115, 89, 32) */
   
-  /* Colores complementarios */
-  --unach-gris: #6c757d;
-  --unach-blanco: #ffffff;
+  /* Colores complementarios para paredes y rotulación */
+  --unach-gris: #6c757d;              /* Gris Imán 311-02 */
+  --unach-blanco: #ffffff;            /* Blanco Pop corn 003-01 */
   --unach-gris-claro: #f8f9fa;
   
-  /* Colores de estado */
-  --color-pendiente: #ffc107;
-  --color-en-proceso: #17a2b8;
-  --color-atendida: #28a745;
-  --color-cerrada: #6c757d;
-  --color-alta: #dc3545;
-  --color-media: #ffc107;
-  --color-baja: #28a745;
+  /* Colores de estado - Semáforo (tonos más suaves y profesionales) */
+  --color-recibido: #e74c3c;          /* Rojo suave - Recibido */
+  --color-pendiente: #f39c12;         /* Amarillo dorado suave - Pendiente/En Proceso */
+  --color-atendido: #27ae60;          /* Verde suave - Atendido/Cerrado */
   
-  /* Tipografía */
+  /* Colores de estado legados (mantener compatibilidad) */
+  --color-en-proceso: #3498db;        /* Azul profesional - En Proceso */
+  --color-atendida: #27ae60;          /* Verde suave - Atendida */
+  --color-cerrada: #95a5a6;           /* Gris suave - Cerrada */
+  
+  /* Colores de prioridad (tonos más suaves y profesionales) */
+  --color-alta: #e74c3c;              /* Rojo suave */
+  --color-media: #f39c12;             /* Amarillo dorado suave */
+  --color-baja: #27ae60;              /* Verde suave */
+  --color-urgente: #dc3545;           /* Rojo vibrante y profesional */
+  
+  /* Colores adicionales para mejor diseño */
+  --color-background-light: #f8f9fa;  /* Fondo claro */
+  --color-border-light: #e9ecef;      /* Borde claro */
+  --color-text-muted: #6c757d;        /* Texto secundario */
+  --color-success-soft: #d4edda;      /* Verde claro para backgrounds */
+  --color-warning-soft: #fff3cd;      /* Amarillo claro para backgrounds */
+  --color-danger-soft: #f8d7da;       /* Rojo claro para backgrounds */
+  --color-info-soft: #d1ecf1;         /* Azul claro para backgrounds */
+  
+  /* Tipografía - Arial según documentación UNACH */
   font-family: Arial, 'Helvetica Neue', Helvetica, sans-serif;
   font-synthesis: none;
   text-rendering: optimizeLegibility;

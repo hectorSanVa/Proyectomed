@@ -36,16 +36,23 @@ export const comunicacionService = {
     return response.data;
   },
 
-  // Buscar por folio
+  // Buscar por folio (usando query parameter para manejar folios con barras)
   getByFolio: async (folio: string) => {
-    const response = await api.get(API_ENDPOINTS.comunicaciones);
-    const comunicaciones = response.data;
-    return comunicaciones.find((c: Comunicacion) => c.folio === folio);
+    // Codificar el folio para URL (las barras se convierten en %2F)
+    const folioEncoded = encodeURIComponent(folio);
+    const response = await api.get(`${API_ENDPOINTS.comunicaciones}/folio?folio=${folioEncoded}`);
+    return response.data;
   },
 
   // Obtener comunicaciones por usuario
   getByUsuarioId: async (idUsuario: number) => {
     const response = await api.get(`${API_ENDPOINTS.comunicaciones}/usuario/${idUsuario}`);
+    return response.data;
+  },
+
+  // Obtener reconocimientos públicos
+  getReconocimientosPublicos: async () => {
+    const response = await api.get(`${API_ENDPOINTS.comunicaciones}/reconocimientos/publicos`);
     return response.data;
   },
 };

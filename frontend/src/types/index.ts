@@ -28,6 +28,7 @@ export interface Comunicacion {
   descripcion: string;
   fecha_recepcion?: string;
   area_involucrada?: string;
+  mostrar_publico?: boolean;  // Para reconocimientos: indica si se muestra en la página pública
 }
 
 export interface ComunicacionCreate {
@@ -37,6 +38,7 @@ export interface ComunicacionCreate {
   descripcion: string;
   area_involucrada?: string;
   medio?: 'F' | 'D';
+  correo?: string; // Correo para asociar el folio en la base de datos
 }
 
 // Tipos de usuario
@@ -60,7 +62,7 @@ export interface Categoria {
 
 // Tipos de estado
 export type UsuarioSession = {
-  id_usuario: number;
+  id_usuario: number | null; // null para sesiones anónimas (sin registro en BD)
   correo: string;
   nombre?: string;
 };

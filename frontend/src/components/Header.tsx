@@ -1,6 +1,7 @@
 import React from 'react';
 import { Link } from 'react-router-dom';
 import { MdLock, MdEmojiEvents } from 'react-icons/md';
+import logoDerecho from '../assets/img/logosuperiorderecho.png';
 import './Header.css';
 
 interface HeaderProps {
@@ -14,14 +15,18 @@ const Header = ({ title, subtitle, showAdminButton = true }: HeaderProps) => {
     <header className="header-unach">
       <div className="header-content">
         <div className="header-left">
-          <span className="header-logo-text">Logo UNACH</span>
+          <img 
+            src={logoDerecho} 
+            alt="Logo UNACH" 
+            className="header-logo-left"
+          />
         </div>
         <div className="header-center">
           <h1 className="header-title-text">
             {title || "Facultad de Medicina Humana \"Dr. Manuel Velasco Suárez\""}
           </h1>
           {subtitle && <p className="header-subtitle">{subtitle}</p>}
-          <p className="header-motto">Educación que transforma</p>
+          <p className="header-motto">Por la conciencia de la necesidad de servir</p>
         </div>
         {showAdminButton && (
           <div className="header-right">

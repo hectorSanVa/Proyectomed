@@ -6,6 +6,8 @@ import { estadoService } from '../../services/estadoService';
 import type { Comunicacion, Estado } from '../../types';
 import './Reconocimientos.css';
 
+// Componente Reconocimientos
+
 interface ReconocimientoConEstado extends Comunicacion {
   estado?: Estado;
 }
@@ -24,19 +26,30 @@ const Reconocimientos = () => {
       setLoading(true);
       setError(null);
       
-      const [comData, estadosData] = await Promise.all([
-        comunicacionService.getAll(),
-        estadoService.getAll()
-      ]);
+      // Obtener reconocimientos públicos directamente desde el endpoint
+      const reconocimientosData = await comunicacionService.getReconocimientosPublicos();
       
-      const reconocimientosData = comData.filter((c: Comunicacion) => c.tipo === 'Reconocimiento');
+      // Si no hay reconocimientos, retornar array vacío
+      if (!reconocimientosData || !Array.isArray(reconocimientosData)) {
+        setReconocimientos([]);
+        return;
+      }
       
       // Cargar estados para cada reconocimiento
+      const estadosData = await estadoService.getAll();
+      
       const reconocimientosConEstado = await Promise.all(
         reconocimientosData.map(async (reconocimiento: Comunicacion) => {
           try {
-            const seguimiento = await seguimientoService.getByComunicacionId(reconocimiento.id_comunicacion!);
-            if (seguimiento) {
+            if (!reconocimiento.id_comunicacion) {
+              return {
+                ...reconocimiento,
+                estado: estadosData.find((e: Estado) => e.nombre_estado === 'Pendiente')
+              };
+            }
+            
+            const seguimiento = await seguimientoService.getByComunicacionId(reconocimiento.id_comunicacion);
+            if (seguimiento && seguimiento.id_estado) {
               const estado = estadosData.find((e: Estado) => e.id_estado === seguimiento.id_estado);
               return {
                 ...reconocimiento,
@@ -48,6 +61,7 @@ const Reconocimientos = () => {
               estado: estadosData.find((e: Estado) => e.nombre_estado === 'Pendiente')
             };
           } catch (err) {
+            console.warn('Error al cargar seguimiento para reconocimiento:', err);
             return {
               ...reconocimiento,
               estado: estadosData.find((e: Estado) => e.nombre_estado === 'Pendiente')
@@ -56,15 +70,12 @@ const Reconocimientos = () => {
         })
       );
       
-      // Filtrar solo los reconocimientos que están "Atendida" o "Cerrada" para mostrar
-      const reconocimientosPublicos = reconocimientosConEstado.filter(
-        (r) => r.estado?.nombre_estado === 'Atendida' || r.estado?.nombre_estado === 'Cerrada'
-      );
-      
-      setReconocimientos(reconocimientosPublicos);
-    } catch (error) {
+      setReconocimientos(reconocimientosConEstado);
+    } catch (error: any) {
       console.error('Error al cargar reconocimientos:', error);
-      setError('Error al cargar los reconocimientos');
+      const errorMessage = error?.response?.data?.error || error?.message || 'Error al cargar los reconocimientos';
+      setError(errorMessage);
+      setReconocimientos([]);
     } finally {
       setLoading(false);
     }
@@ -80,7 +91,7 @@ const Reconocimientos = () => {
   return (
     <UserLayout>
       <div className="reconocimientos-container">
-        <h1>Reconocimientos</h1>
+        <h1>Felicitaciones y Reconocimientos</h1>
         <p className="reconocimientos-subtitle">
           Reconocimientos destacados de la Facultad de Medicina Humana "Dr. Manuel Velasco Suárez" Campus IV
         </p>
@@ -124,52 +135,79 @@ const Reconocimientos = () => {
             </p>
           </div>
         ) : (
-          <div className="reconocimientos-gallery">
-            {reconocimientos.map((reconocimiento) => {
-              // Extraer nombre del reconocido de la descripción si es posible
-              const descripcion = reconocimiento.descripcion || '';
-              const lineas = descripcion.split('\n');
-              const primeraLinea = lineas[0] || '';
-              
-              // Intentar extraer nombre (puede estar en diferentes formatos)
-              let nombreReconocido = 'Reconocimiento';
-              if (primeraLinea.includes('a') || primeraLinea.includes('al') || primeraLinea.includes('para')) {
-                const match = primeraLinea.match(/(?:a|al|para)\s+([A-Z][a-záéíóúñ]+(?:\s+[A-Z][a-záéíóúñ]+)*)/);
-                if (match) {
-                  nombreReconocido = match[1];
+          <>
+            <div className="reconocimientos-gallery">
+              {reconocimientos.map((reconocimiento) => {
+                // Extraer información del reconocimiento
+                const descripcion = reconocimiento.descripcion || '';
+                const lineas = descripcion.split('\n');
+                const primeraLinea = lineas[0] || '';
+                
+                // Intentar extraer nombre (puede estar en diferentes formatos)
+                let nombreReconocido = 'Reconocimiento';
+                let tipoReconocimiento = reconocimiento.area_involucrada || 'Reconocimiento especial';
+                
+                // Mejorar la extracción del nombre
+                if (primeraLinea.includes('a ') || primeraLinea.includes('al ') || primeraLinea.includes('para ')) {
+                  const match = primeraLinea.match(/(?:a|al|para)\s+([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)*(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)?)/);
+                  if (match) {
+                    nombreReconocido = match[1];
+                  }
+                } else if (primeraLinea.match(/^[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+/)) {
+                  // Si la primera línea parece un nombre, usarlo
+                  const match = primeraLinea.match(/^([A-ZÁÉÍÓÚÑ][a-záéíóúñ]+(?:\s+[A-ZÁÉÍÓÚÑ][a-záéíóúñ]+)+)/);
+                  if (match) {
+                    nombreReconocido = match[1];
+                  }
                 }
-              }
-              
-              return (
-                <div key={reconocimiento.id_comunicacion} className="reconocimiento-card">
-                  <div className="reconocimiento-avatar">
-                    {nombreReconocido.substring(0, 2).toUpperCase()}
-                  </div>
-                  <h3>{nombreReconocido}</h3>
-                  <p className="reconocimiento-rol">
-                    {reconocimiento.area_involucrada || 'Reconocimiento especial'}
-                  </p>
-                  <div className={`reconocimiento-logro ${getEstadoClass(reconocimiento.estado?.nombre_estado)}`}>
-                    {descripcion.length > 150 ? descripcion.substring(0, 150) + '...' : descripcion}
-                  </div>
-                  {reconocimiento.fecha_recepcion && (
-                    <div className="reconocimiento-fecha">
-                      {new Date(reconocimiento.fecha_recepcion).toLocaleDateString('es-MX', {
-                        year: 'numeric',
-                        month: 'long',
-                        day: 'numeric'
-                      })}
+                
+                // Determinar tipo de reconocimiento basado en área o descripción
+                if (reconocimiento.area_involucrada) {
+                  tipoReconocimiento = reconocimiento.area_involucrada;
+                } else if (descripcion.toLowerCase().includes('docente') || descripcion.toLowerCase().includes('profesor')) {
+                  tipoReconocimiento = 'Docente destacado';
+                } else if (descripcion.toLowerCase().includes('estudiante')) {
+                  tipoReconocimiento = 'Estudiante ejemplar';
+                } else {
+                  tipoReconocimiento = 'Reconocimiento especial';
+                }
+                
+                // Obtener iniciales para el avatar
+                const iniciales = nombreReconocido.split(' ').map(n => n[0]).join('').substring(0, 2).toUpperCase();
+                
+                // Determinar color del badge según el tipo
+                const badgeColors = [
+                  { class: 'logro-verde', text: 'Por su dedicación y excelencia académica' },
+                  { class: 'logro-azul', text: 'Por su participación en proyectos sociales' },
+                  { class: 'logro-amarillo', text: 'Por innovación en métodos de enseñanza' }
+                ];
+                const badgeIndex = reconocimiento.id_comunicacion! % badgeColors.length;
+                const badgeColor = badgeColors[badgeIndex];
+                
+                return (
+                  <div key={reconocimiento.id_comunicacion} className="reconocimiento-card">
+                    <div className="reconocimiento-header">
+                      <h3 className="reconocimiento-nombre">{nombreReconocido}</h3>
+                      <div className="reconocimiento-avatar">
+                        {iniciales || 'R'}
+                      </div>
                     </div>
-                  )}
-                  {reconocimiento.folio && (
-                    <div className="reconocimiento-folio">
-                      Folio: {reconocimiento.folio}
+                    <p className="reconocimiento-rol">
+                      {tipoReconocimiento}
+                    </p>
+                    <div className={`reconocimiento-logro ${badgeColor.class}`}>
+                      {descripcion.length > 120 ? descripcion.substring(0, 120) + '...' : descripcion}
                     </div>
-                  )}
-                </div>
-              );
-            })}
-          </div>
+                  </div>
+                );
+              })}
+            </div>
+            
+            <div className="reconocimientos-nota">
+              <strong>Nota:</strong> Esta galería muestra los reconocimientos seleccionados por el administrador. 
+              Aquí aparecerán los reconocimientos reales que hayan sido aprobados y marcados para mostrar públicamente.
+            </div>
+          </>
         )}
       </div>
     </UserLayout>

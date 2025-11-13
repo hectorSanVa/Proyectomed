@@ -7,4 +7,5 @@ export interface Comunicacion {
   descripcion: string;
   fecha_recepcion?: Date;
   area_involucrada?: string;
+  mostrar_publico?: boolean;  // Para reconocimientos: indica si se muestra en la página pública
 }

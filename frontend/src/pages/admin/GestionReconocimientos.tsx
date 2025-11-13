@@ -2,7 +2,8 @@ import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { useToast } from '../../components/common/ToastContainer';
 import ConfirmModal from '../../components/common/ConfirmModal';
-import { MdSearch, MdRefresh, MdVisibility, MdEdit, MdDelete, MdClose, MdPictureAsPdf } from 'react-icons/md';
+import Semaforo, { mapEstadoToSemaforo } from '../../components/common/Semaforo';
+import { MdSearch, MdRefresh, MdVisibility, MdEdit, MdDelete, MdClose, MdPictureAsPdf, MdAssignment, MdPriorityHigh, MdPerson, MdNotes, MdInfo, MdCheckCircle, MdArrowForward, MdPublic, MdPublicOff, MdFilterList, MdCategory, MdSort, MdDateRange } from 'react-icons/md';
 import { comunicacionService } from '../../services/comunicacionService';
 import { seguimientoService } from '../../services/seguimientoService';
 import { estadoService } from '../../services/estadoService';
@@ -13,6 +14,8 @@ import { usuarioService } from '../../services/usuarioService';
 import { API_BASE_URL } from '../../config/api';
 import jsPDF from 'jspdf';
 import type { Comunicacion, Estado, Seguimiento, HistorialEstado, Categoria, Evidencia, Usuario } from '../../types';
+import logoIzquierdo from '../../assets/img/logosuperiorizquiero.png';
+import logoDerecho from '../../assets/img/logosuperiorderecho.png';
 import './GestionComunicaciones.css';
 
 interface ComunicacionConEstado extends Comunicacion {
@@ -31,7 +34,7 @@ const GestionReconocimientos = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false);
   const [comunicacionToDelete, setComunicacionToDelete] = useState<number | null>(null);
   const [searchTerm, setSearchTerm] = useState('');
-  const [filterEstado, setFilterEstado] = useState('Todos');
+  const [filterEstado, setFilterEstado] = useState('Activas'); // Por defecto mostrar solo activas (excluye cerradas)
   const [filterCategoria, setFilterCategoria] = useState('Todas');
   const [fechaDesde, setFechaDesde] = useState('');
   const [fechaHasta, setFechaHasta] = useState('');
@@ -48,6 +51,7 @@ const GestionReconocimientos = () => {
   const [nuevoResponsable, setNuevoResponsable] = useState('');
   const [nuevasNotas, setNuevasNotas] = useState('');
   const [nuevaPrioridad, setNuevaPrioridad] = useState<'Baja' | 'Media' | 'Alta' | 'Urgente'>('Media');
+  const [mostrarPublico, setMostrarPublico] = useState(false);
   const [evidencias, setEvidencias] = useState<Evidencia[]>([]);
   const [usuarioComunicacion, setUsuarioComunicacion] = useState<Usuario | null>(null);
   const [generandoPDF, setGenerandoPDF] = useState(false);
@@ -146,8 +150,18 @@ const GestionReconocimientos = () => {
         c.folio.toLowerCase().includes(searchTerm.toLowerCase()) ||
         c.descripcion.toLowerCase().includes(searchTerm.toLowerCase());
       
-      const matchesEstado = filterEstado === 'Todos' || 
-        c.estado?.nombre_estado === filterEstado;
+      // Lógica de filtro por estado
+      let matchesEstado = true;
+      if (filterEstado === 'Activas') {
+        // Mostrar solo comunicaciones activas (excluir cerradas)
+        matchesEstado = c.estado?.nombre_estado !== 'Cerrada';
+      } else if (filterEstado === 'Todos') {
+        // Mostrar todas, incluyendo cerradas
+        matchesEstado = true;
+      } else {
+        // Filtrar por estado específico
+        matchesEstado = c.estado?.nombre_estado === filterEstado;
+      }
       
       const matchesCategoria = filterCategoria === 'Todas' || 
         c.id_categoria === Number(filterCategoria);
@@ -217,10 +231,10 @@ const GestionReconocimientos = () => {
     return <span className={`badge badge-${estadoClass}`}>{estadoNombre}</span>;
   };
 
-  const getPrioridadBadge = (prioridad?: 'Baja' | 'Media' | 'Alta' | 'Urgente') => {
-    const prioridadActual = prioridad || 'Media';
-    const prioridadClass = prioridadActual.toLowerCase();
-    return <span className={`badge badge-prioridad badge-${prioridadClass}`}>{prioridadActual}</span>;
+  const getEstadoSemaforo = (comunicacion: ComunicacionConEstado) => {
+    const estadoNombre = comunicacion.estado?.nombre_estado || 'Pendiente';
+    const estadoSemaforo = mapEstadoToSemaforo(estadoNombre);
+    return <Semaforo estado={estadoSemaforo} showLabel={true} size="small" className="horizontal" />;
   };
 
   const handleVer = async (comunicacion: ComunicacionConEstado) => {
@@ -259,6 +273,33 @@ const GestionReconocimientos = () => {
     }
   };
 
+  // Función helper para cargar imagen y convertir a base64
+  const loadImageAsBase64 = (imagePath: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          try {
+            const dataURL = canvas.toDataURL('image/png');
+            resolve(dataURL);
+          } catch (error) {
+            reject(error);
+          }
+        } else {
+          reject(new Error('No se pudo obtener el contexto del canvas'));
+        }
+      };
+      img.onerror = reject;
+      img.src = imagePath;
+    });
+  };
+
   const descargarPDFComunicacion = async () => {
     if (!selectedComunicacion) return;
 
@@ -268,37 +309,130 @@ const GestionReconocimientos = () => {
       const pageWidth = doc.internal.pageSize.getWidth();
       const margin = 15;
       let yPosition = margin;
-      const lineHeight = 7;
+      const lineHeight = 8; // Aumentado para mejor legibilidad
 
-      const colorAzul: [number, number, number] = [25, 45, 99];
-      const colorNegro: [number, number, number] = [0, 0, 0];
+      // Colores profesionales mejorados
+      const colorAzulOscuro: [number, number, number] = [25, 45, 99]; // #192d63 - Azul institucional
+      const colorAzulClaro: [number, number, number] = [41, 128, 185]; // #2980b9 - Azul profesional
+      const colorGrisOscuro: [number, number, number] = [44, 62, 80]; // #2c3e50 - Gris profesional
+      const colorGrisClaro: [number, number, number] = [108, 117, 125]; // #6c757d - Gris suave
+      const colorNegro: [number, number, number] = [33, 37, 41]; // #212529 - Negro suave
+      const colorBlanco: [number, number, number] = [255, 255, 255];
 
-      doc.setFontSize(14);
-      doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2]);
+      // Cargar logos como base64
+      let logoIzquierdoBase64: string | null = null;
+      let logoDerechoBase64: string | null = null;
+      
+      try {
+        logoIzquierdoBase64 = await loadImageAsBase64(logoIzquierdo);
+        logoDerechoBase64 = await loadImageAsBase64(logoDerecho);
+      } catch (error) {
+        console.warn('Error al cargar logos para PDF:', error);
+      }
+
+      // Header con logos - mantener proporción original
+      const headerY = 10; // Posición Y del header
+      const maxLogoHeight = 20; // Altura máxima de los logos en mm
+      const maxLogoWidth = 45; // Ancho máximo de los logos en mm
+
+      // Logo izquierdo - mantener proporción
+      if (logoIzquierdoBase64) {
+        try {
+          const img = new Image();
+          img.src = logoIzquierdoBase64;
+          await new Promise((resolve) => {
+            img.onload = () => {
+              const aspectRatio = img.width / img.height;
+              let logoWidth = maxLogoWidth;
+              let logoHeight = maxLogoWidth / aspectRatio;
+              
+              // Si la altura excede el máximo, ajustar
+              if (logoHeight > maxLogoHeight) {
+                logoHeight = maxLogoHeight;
+                logoWidth = maxLogoHeight * aspectRatio;
+              }
+              
+              doc.addImage(logoIzquierdoBase64, 'PNG', margin, headerY, logoWidth, logoHeight);
+              resolve(null);
+            };
+            img.onerror = resolve; // Continuar aunque falle
+          });
+        } catch (error) {
+          console.warn('Error al agregar logo izquierdo:', error);
+        }
+      }
+
+      // Logo derecho - mantener proporción
+      if (logoDerechoBase64) {
+        try {
+          const img = new Image();
+          img.src = logoDerechoBase64;
+          await new Promise((resolve) => {
+            img.onload = () => {
+              const aspectRatio = img.width / img.height;
+              let logoWidth = maxLogoWidth;
+              let logoHeight = maxLogoWidth / aspectRatio;
+              
+              // Si la altura excede el máximo, ajustar
+              if (logoHeight > maxLogoHeight) {
+                logoHeight = maxLogoHeight;
+                logoWidth = maxLogoHeight * aspectRatio;
+              }
+              
+              doc.addImage(logoDerechoBase64, 'PNG', pageWidth - margin - logoWidth, headerY, logoWidth, logoHeight);
+              resolve(null);
+            };
+            img.onerror = resolve; // Continuar aunque falle
+          });
+        } catch (error) {
+          console.warn('Error al agregar logo derecho:', error);
+        }
+      }
+      
+      // Calcular altura máxima de logos para posicionar el título
+      const logoHeight = maxLogoHeight;
+
+      // Título principal (centrado entre los logos)
+      yPosition = headerY + logoHeight + 10; // Espacio después de los logos
+      doc.setFontSize(16);
+      doc.setTextColor(...colorAzulOscuro);
       doc.setFont('helvetica', 'bold');
       doc.text('FORMATO DE QUEJAS, SUGERENCIAS Y RECONOCIMIENTOS', pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += lineHeight;
-      doc.setFontSize(12);
-      doc.text('FORMATO DE QUEJAS Y SUGERENCIAS', pageWidth / 2, yPosition, { align: 'center' });
-      yPosition += lineHeight * 1.5;
-
-      doc.setFontSize(10);
-      doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
-      doc.setFont('helvetica', 'bold');
-      doc.text('Folio:', margin, yPosition);
-      doc.setFont('helvetica', 'normal');
-      doc.text(selectedComunicacion.folio || 'N/A', margin + 20, yPosition);
+      yPosition += lineHeight * 1.2;
+      
+      doc.setFontSize(14);
+      doc.setTextColor(...colorAzulClaro);
+      doc.text('FORMATO DE RECONOCIMIENTOS', pageWidth / 2, yPosition, { align: 'center' });
       yPosition += lineHeight * 2;
 
-      doc.setFontSize(11);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2]);
-      doc.text('DATOS DEL REMITENTE', margin, yPosition);
-      yPosition += lineHeight * 1.2;
+      // Línea decorativa
+      doc.setDrawColor(...colorAzulOscuro);
+      doc.setLineWidth(0.5);
+      doc.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += lineHeight * 1.5;
 
-      doc.setFontSize(10);
+      // Folio con estilo mejorado
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
+      doc.text('Folio:', margin, yPosition);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
+      doc.setTextColor(...colorNegro);
+      doc.text(selectedComunicacion.folio || 'N/A', margin + 25, yPosition);
+      yPosition += lineHeight * 2;
+
+      // DATOS DEL REMITENTE con fondo destacado
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorBlanco);
+      doc.text('DATOS DEL REMITENTE', margin + 2, yPosition);
+      yPosition += lineHeight * 1.8;
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
       
       // Verificar si es confidencial o anónima
       const esConfidencial = usuarioComunicacion?.confidencial || !selectedComunicacion.id_usuario;
@@ -311,9 +445,9 @@ const GestionReconocimientos = () => {
         doc.text('Comunicación Confidencial/Anónima', margin + 20, yPosition);
         yPosition += lineHeight;
         doc.setFont('helvetica', 'italic');
-        doc.setTextColor(128, 128, 128);
+        doc.setTextColor(...colorGrisClaro);
         doc.text('Los datos personales del remitente han sido ocultados por solicitud de confidencialidad.', margin, yPosition, { maxWidth: pageWidth - (margin * 2) });
-        doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
+        doc.setTextColor(...colorNegro);
         yPosition += lineHeight * 1.5;
       } else if (usuarioComunicacion) {
         // Si no es confidencial, mostrar todos los datos
@@ -330,8 +464,12 @@ const GestionReconocimientos = () => {
         doc.setFont('helvetica', 'bold');
         doc.text('Semestre/área de adscripción:', margin, yPosition);
         doc.setFont('helvetica', 'normal');
-        doc.text(usuarioComunicacion.semestre_area || 'N/A', margin + 50, yPosition);
-        yPosition += lineHeight;
+        const semestreArea = usuarioComunicacion.semestre_area || 'N/A';
+        const semestreAreaLines = doc.splitTextToSize(semestreArea, pageWidth - (margin * 2) - 50);
+        semestreAreaLines.forEach((line: string, index: number) => {
+          doc.text(line, margin + 50, yPosition + (index * lineHeight));
+        });
+        yPosition += (semestreAreaLines.length * lineHeight);
         doc.setFont('helvetica', 'bold');
         doc.text('Teléfono (opcional):', margin, yPosition);
         doc.setFont('helvetica', 'normal');
@@ -362,15 +500,18 @@ const GestionReconocimientos = () => {
         yPosition += lineHeight * 1.5;
       }
 
-      doc.setFontSize(11);
+      // TIPO DE COMUNICACIÓN con fondo destacado
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2]);
-      doc.text('TIPO DE COMUNICACIÓN', margin, yPosition);
-      yPosition += lineHeight * 1.2;
+      doc.setTextColor(...colorBlanco);
+      doc.text('TIPO DE COMUNICACIÓN', margin + 2, yPosition);
+      yPosition += lineHeight * 1.8;
 
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
+      doc.setTextColor(...colorNegro);
       doc.setFont('helvetica', 'bold');
       doc.text('Tipo:', margin, yPosition);
       doc.setFont('helvetica', 'normal');
@@ -384,34 +525,61 @@ const GestionReconocimientos = () => {
       doc.text(categoria?.nombre_categoria || 'N/A', margin + 30, yPosition);
       yPosition += lineHeight * 1.5;
 
-      doc.setFontSize(11);
+      // DETALLES DE LA QUEJA O SUGERENCIA con fondo destacado
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2]);
-      doc.text('DETALLES DE LA QUEJA O SUGERENCIA', margin, yPosition);
-      yPosition += lineHeight * 1.2;
+      doc.setTextColor(...colorBlanco);
+      doc.text('DETALLES DE LA QUEJA O SUGERENCIA', margin + 2, yPosition);
+      yPosition += lineHeight * 1.8;
 
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
+      doc.setTextColor(...colorNegro);
+      
+      // Asunto (resumen de la descripción)
+      const asunto = selectedComunicacion.descripcion 
+        ? (selectedComunicacion.descripcion.length > 80 
+            ? selectedComunicacion.descripcion.substring(0, 80) + '...' 
+            : selectedComunicacion.descripcion)
+        : 'N/A';
       doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
+      doc.text('Asunto:', margin, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorAzulClaro);
+      const asuntoLines = doc.splitTextToSize(asunto, pageWidth - (margin * 2) - 25);
+      asuntoLines.forEach((line: string, index: number) => {
+        doc.text(line, margin + 25, yPosition + (index * lineHeight));
+      });
+      yPosition += (asuntoLines.length * lineHeight) + lineHeight * 0.5;
+      
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
       doc.text('Fecha:', margin, yPosition);
       doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
       const fechaFormateada = selectedComunicacion.fecha_recepcion 
         ? new Date(selectedComunicacion.fecha_recepcion).toLocaleDateString('es-MX')
         : 'N/A';
-      doc.text(fechaFormateada, margin + 20, yPosition);
-      yPosition += lineHeight;
-
-      doc.setFont('helvetica', 'bold');
-      doc.text('Área involucrada:', margin, yPosition);
-      doc.setFont('helvetica', 'normal');
-      doc.text(selectedComunicacion.area_involucrada || 'N/A', margin + 40, yPosition);
+      doc.text(fechaFormateada, margin + 25, yPosition);
       yPosition += lineHeight * 1.2;
 
       doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
+      doc.text('Área involucrada:', margin, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+      doc.text(selectedComunicacion.area_involucrada || 'N/A', margin + 45, yPosition);
+      yPosition += lineHeight * 1.5;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
       doc.text('Descripción de hechos:', margin, yPosition);
       yPosition += lineHeight;
       doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
       const descripcionLines = doc.splitTextToSize(selectedComunicacion.descripcion || 'N/A', pageWidth - (margin * 2));
       descripcionLines.forEach((line: string) => {
         if (yPosition > doc.internal.pageSize.getHeight() - 30) {
@@ -421,7 +589,7 @@ const GestionReconocimientos = () => {
         doc.text(line, margin, yPosition);
         yPosition += lineHeight;
       });
-      yPosition += lineHeight;
+      yPosition += lineHeight * 0.8;
 
       if (selectedComunicacion.seguimiento?.notas) {
         if (yPosition > doc.internal.pageSize.getHeight() - 40) {
@@ -444,34 +612,53 @@ const GestionReconocimientos = () => {
         yPosition += lineHeight;
       }
 
+      // EVIDENCIA con fondo destacado
       if (yPosition > doc.internal.pageSize.getHeight() - 40) {
         doc.addPage();
         yPosition = margin;
       }
-      doc.setFontSize(11);
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2]);
-      doc.text('EVIDENCIA (Opcional)', margin, yPosition);
-      yPosition += lineHeight;
-
-      doc.setFontSize(9);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
-      doc.text('Si considera necesario envíe fotos, documentos o cualquier evidencia al correo quejasysugerenciasfmht@unach.mx', margin, yPosition, { maxWidth: pageWidth - (margin * 2) });
-      yPosition += lineHeight * 1.2;
+      doc.setTextColor(...colorBlanco);
+      doc.text('EVIDENCIA (Opcional)', margin + 2, yPosition);
+      yPosition += lineHeight * 1.8;
 
       if (evidencias.length > 0) {
-        evidencias.forEach((evidencia) => {
+        // Lista de evidencias adjuntas
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colorNegro);
+        doc.text(`Se adjuntan ${evidencias.length} evidencia(s):`, margin, yPosition);
+        yPosition += lineHeight * 1.2;
+
+        evidencias.forEach((evidencia, index) => {
+          if (yPosition > doc.internal.pageSize.getHeight() - 30) {
+            doc.addPage();
+            yPosition = margin;
+          }
+
           doc.setFont('helvetica', 'bold');
-          doc.text('Se adjunta evidencia: Sí', margin, yPosition);
-          yPosition += lineHeight;
+          doc.setTextColor(...colorGrisOscuro);
+          doc.text(`${index + 1}.`, margin + 5, yPosition);
+          
           doc.setFont('helvetica', 'normal');
-          doc.text(`Tipo: ${evidencia.tipo_archivo}`, margin, yPosition);
+          doc.setTextColor(...colorNegro);
+          doc.text(`${evidencia.nombre_archivo} (${evidencia.tipo_archivo})`, margin + 12, yPosition);
           yPosition += lineHeight;
-          doc.text(`Nombre: ${evidencia.nombre_archivo}`, margin, yPosition);
-          yPosition += lineHeight * 1.2;
         });
+
+        yPosition += lineHeight * 0.5;
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(...colorGrisClaro);
+        doc.setFontSize(11);
+        doc.text('Nota: Las evidencias están disponibles para descarga en el sistema.', margin, yPosition, { maxWidth: pageWidth - (margin * 2) });
+        yPosition += lineHeight * 1.2;
       } else {
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colorNegro);
         doc.text('No se adjunta evidencia', margin, yPosition);
         yPosition += lineHeight;
       }
@@ -480,27 +667,55 @@ const GestionReconocimientos = () => {
         doc.addPage();
         yPosition = margin;
       }
-      yPosition += lineHeight * 2;
-      doc.setFontSize(11);
+      yPosition += lineHeight * 1.5;
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(colorAzul[0], colorAzul[1], colorAzul[2]);
-      doc.text('FIRMA (Opcional)', margin, yPosition);
+      doc.setTextColor(...colorBlanco);
+      doc.text('FIRMA (Opcional)', margin + 2, yPosition);
       yPosition += lineHeight * 2;
 
-      doc.setFontSize(10);
+      doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
+      doc.setTextColor(...colorNegro);
       doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
       doc.text('Firma del remitente:', margin, yPosition);
-      yPosition += lineHeight * 2;
+      yPosition += lineHeight * 2.5;
 
       doc.setFont('helvetica', 'bold');
       doc.text('Fecha:', margin, yPosition);
       doc.setFont('helvetica', 'normal');
-      doc.text(new Date().toLocaleDateString('es-MX'), margin + 20, yPosition);
+      doc.setTextColor(...colorNegro);
+      doc.text(new Date().toLocaleDateString('es-MX'), margin + 25, yPosition);
 
+      // Generar PDF como Blob
       const fileName = `formato_${selectedComunicacion.folio || selectedComunicacion.id_comunicacion}_${new Date().toISOString().split('T')[0]}.pdf`;
-      doc.save(fileName);
+      const pdfBlob = doc.output('blob');
+      
+      // Descargar PDF localmente
+      const url = URL.createObjectURL(pdfBlob);
+      const link = document.createElement('a');
+      link.href = url;
+      link.download = fileName;
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      URL.revokeObjectURL(url);
+
+      // Guardar PDF en el servidor (si hay id_comunicacion)
+      if (selectedComunicacion.id_comunicacion) {
+        try {
+          await evidenciaService.uploadPDF(selectedComunicacion.id_comunicacion, pdfBlob, fileName);
+          showToast('PDF descargado y guardado en el servidor', 'success');
+        } catch (uploadError) {
+          console.warn('PDF descargado localmente, pero no se pudo guardar en el servidor:', uploadError);
+          showToast('PDF descargado. No se pudo guardar en el servidor', 'warning');
+        }
+      } else {
+        showToast('PDF descargado exitosamente', 'success');
+      }
     } catch (error) {
       console.error('Error al generar PDF:', error);
       showToast('Error al generar el PDF del formato', 'error');
@@ -514,7 +729,14 @@ const GestionReconocimientos = () => {
     setNuevoEstado(comunicacion.estado?.id_estado || 1);
     setNuevoResponsable(comunicacion.responsable || '');
     setNuevasNotas('');
-    setNuevaPrioridad((comunicacion.seguimiento?.prioridad as 'Baja' | 'Media' | 'Alta' | 'Urgente') || 'Media');
+    // Para reconocimientos, siempre usar "Baja" (aunque no se muestre)
+    // Para quejas/sugerencias, usar la prioridad existente o "Media" por defecto
+    setNuevaPrioridad(
+      comunicacion.tipo === 'Reconocimiento' 
+        ? 'Baja' 
+        : ((comunicacion.seguimiento?.prioridad as 'Baja' | 'Media' | 'Alta' | 'Urgente') || 'Media')
+    );
+    setMostrarPublico(comunicacion.mostrar_publico || false);
     setModalMode('estado');
     setShowModal(true);
   };
@@ -543,14 +765,27 @@ const GestionReconocimientos = () => {
   const handleGuardarEstado = async () => {
     if (!selectedComunicacion) return;
     
+    // Validar que las notas sean obligatorias si el estado es "Atendida" o "Cerrada"
+    const estadoSeleccionado = estados.find(e => e.id_estado === nuevoEstado);
+    const nombreEstado = estadoSeleccionado?.nombre_estado || 'Estado';
+    const requiereNotas = nombreEstado === 'Atendida' || nombreEstado === 'Cerrada';
+    
+    if (requiereNotas && (!nuevasNotas || nuevasNotas.trim().length === 0)) {
+      showToast('⚠️ Las notas son obligatorias cuando el estado es "Atendida" o "Cerrada", ya que serán visibles para el usuario.', 'error');
+      return;
+    }
+    
     try {
+      // Para reconocimientos, la prioridad siempre es "Baja" (no se muestra al usuario)
+      const prioridadFinal = selectedComunicacion.tipo === 'Reconocimiento' ? 'Baja' : nuevaPrioridad;
+      
       // Crear o actualizar seguimiento
       if (selectedComunicacion.seguimiento?.id_seguimiento) {
         await seguimientoService.update(selectedComunicacion.seguimiento.id_seguimiento, {
           id_estado: nuevoEstado,
           responsable: nuevoResponsable,
           notas: nuevasNotas,
-          prioridad: nuevaPrioridad,
+          prioridad: prioridadFinal,
         });
       } else {
         await seguimientoService.create({
@@ -558,7 +793,7 @@ const GestionReconocimientos = () => {
           id_estado: nuevoEstado,
           responsable: nuevoResponsable,
           notas: nuevasNotas,
-          prioridad: nuevaPrioridad,
+          prioridad: prioridadFinal,
         });
       }
       
@@ -570,11 +805,31 @@ const GestionReconocimientos = () => {
         notas: nuevasNotas,
       });
       
+      // Actualizar mostrar_publico si es un reconocimiento
+      if (selectedComunicacion.tipo === 'Reconocimiento') {
+        await comunicacionService.update(selectedComunicacion.id_comunicacion!, {
+          mostrar_publico: mostrarPublico
+        });
+      }
+      
+      // Cerrar modal primero
       setShowModal(false);
-      loadData();
-    } catch (error) {
+      
+      // Recargar datos
+      await loadData();
+      
+      // Mostrar mensaje específico si se cerró
+      if (nombreEstado === 'Cerrada') {
+        showToast('✅ Comunicación cerrada. Ya no aparecerá en las listas activas por defecto. Puedes verla seleccionando "Cerradas" en el filtro o consultándola por folio.', 'success');
+      } else {
+        showToast(`✅ Estado actualizado a "${nombreEstado}" correctamente`, 'success');
+      }
+    } catch (error: unknown) {
       console.error('Error al guardar estado:', error);
-      showToast('Error al guardar el estado', 'error');
+      const errorMessage = (error as { response?: { data?: { error?: string } }; message?: string })?.response?.data?.error || 
+                          (error as { message?: string })?.message || 
+                          'Error al guardar el estado';
+      showToast(`Error: ${errorMessage}`, 'error');
     }
   };
 
@@ -596,20 +851,20 @@ const GestionReconocimientos = () => {
       <div className="gestion-container">
         <div className="gestion-header">
           <div>
-            <h1>Gestión de Reconocimientos</h1>
+            <h1>Felicitaciones y Reconocimientos</h1>
             <p>Facultad de Medicina Humana "Dr. Manuel Velasco Suárez" Campus IV</p>
             <div style={{ 
               marginTop: '1rem', 
               padding: '1rem', 
-              background: '#fff3cd', 
+              background: '#e7f3ff', 
               borderRadius: '6px', 
-              borderLeft: '4px solid #ffc107',
+              borderLeft: '4px solid #2196F3',
               fontSize: '0.9rem',
-              color: '#856404'
+              color: '#1976D2'
             }}>
               <strong>Nota:</strong> Los reconocimientos son mensajes positivos para destacar el buen trabajo, acciones positivas o logros de miembros de la comunidad. 
-              Una vez que un reconocimiento sea marcado como "Atendida" o "Cerrada", se publicará automáticamente en la página pública de Reconocimientos 
-              para que toda la comunidad pueda verlo.
+              Puede seleccionar qué reconocimientos mostrar públicamente marcando la opción "Mostrar en la página pública" al cambiar el estado. 
+              Solo los reconocimientos seleccionados aparecerán en la página de Felicitaciones y Reconocimientos para los usuarios.
             </div>
           </div>
         </div>
@@ -630,56 +885,92 @@ const GestionReconocimientos = () => {
               </button>
             </div>
             <div className="filtros-selects">
-              <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)}>
-                <option>Todos</option>
-                <option>Pendiente</option>
-                <option>En Proceso</option>
-                <option>Atendida</option>
-                <option>Cerrada</option>
-              </select>
-              <select value={filterCategoria} onChange={(e) => setFilterCategoria(e.target.value)}>
-                <option>Todas</option>
-                {categorias.map((cat) => (
-                  <option key={cat.id_categoria} value={cat.id_categoria}>
-                    {cat.nombre_categoria}
-                  </option>
-                ))}
-              </select>
-              <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as 'fecha' | 'folio' | 'estado')}>
-                <option value="fecha">Ordenar por Fecha</option>
-                <option value="folio">Ordenar por Folio</option>
-                <option value="estado">Ordenar por Estado</option>
-              </select>
-              <select value={ordenDireccion} onChange={(e) => setOrdenDireccion(e.target.value as 'asc' | 'desc')}>
-                <option value="desc">Descendente</option>
-                <option value="asc">Ascendente</option>
-              </select>
+              <div className="filter-group">
+                <label className="filter-label">
+                  <MdFilterList className="filter-icon" />
+                  Estado
+                </label>
+                <select value={filterEstado} onChange={(e) => setFilterEstado(e.target.value)} className="filter-select">
+                  <option value="Activas">Activas (sin cerradas)</option>
+                  <option value="Todos">Todos (incluye cerradas)</option>
+                  <option value="Pendiente">Pendiente</option>
+                  <option value="En Proceso">En Proceso</option>
+                  <option value="Atendida">Atendida</option>
+                  <option value="Cerrada">Cerradas</option>
+                </select>
+              </div>
+              <div className="filter-group">
+                <label className="filter-label">
+                  <MdCategory className="filter-icon" />
+                  Categoría
+                </label>
+                <select value={filterCategoria} onChange={(e) => setFilterCategoria(e.target.value)} className="filter-select">
+                  <option>Todas</option>
+                  {categorias.map((cat) => (
+                    <option key={cat.id_categoria} value={cat.id_categoria}>
+                      {cat.nombre_categoria}
+                    </option>
+                  ))}
+                </select>
+              </div>
+              <div className="filter-group">
+                <label className="filter-label">
+                  <MdSort className="filter-icon" />
+                  Ordenar por
+                </label>
+                <select value={ordenPor} onChange={(e) => setOrdenPor(e.target.value as 'fecha' | 'folio' | 'estado')} className="filter-select">
+                  <option value="fecha">Fecha</option>
+                  <option value="folio">Folio</option>
+                  <option value="estado">Estado</option>
+                </select>
+              </div>
+              <div className="filter-group">
+                <label className="filter-label">
+                  <MdSort className="filter-icon" />
+                  Dirección
+                </label>
+                <select value={ordenDireccion} onChange={(e) => setOrdenDireccion(e.target.value as 'asc' | 'desc')} className="filter-select">
+                  <option value="desc">Descendente</option>
+                  <option value="asc">Ascendente</option>
+                </select>
+              </div>
             </div>
             <div className="filtros-fechas">
-              <label>Desde:</label>
-              <input
-                type="date"
-                value={fechaDesde}
-                onChange={(e) => setFechaDesde(e.target.value)}
-              />
-              <label>Hasta:</label>
-              <input
-                type="date"
-                value={fechaHasta}
-                onChange={(e) => setFechaHasta(e.target.value)}
-              />
-              {(fechaDesde || fechaHasta) && (
-                <button 
-                  className="btn-clear-filters"
-                  onClick={() => {
-                    setFechaDesde('');
-                    setFechaHasta('');
-                  }}
-                  title="Limpiar filtros de fecha"
-                >
-                  ✕
-                </button>
-              )}
+              <div className="filter-group">
+                <label className="filter-label">
+                  <MdDateRange className="filter-icon" />
+                  Rango de fechas
+                </label>
+                <div className="date-inputs">
+                  <input
+                    type="date"
+                    value={fechaDesde}
+                    onChange={(e) => setFechaDesde(e.target.value)}
+                    className="date-input"
+                    placeholder="Desde"
+                  />
+                  <span className="date-separator">-</span>
+                  <input
+                    type="date"
+                    value={fechaHasta}
+                    onChange={(e) => setFechaHasta(e.target.value)}
+                    className="date-input"
+                    placeholder="Hasta"
+                  />
+                  {(fechaDesde || fechaHasta) && (
+                    <button 
+                      className="btn-clear-filters"
+                      onClick={() => {
+                        setFechaDesde('');
+                        setFechaHasta('');
+                      }}
+                      title="Limpiar filtros de fecha"
+                    >
+                      ✕
+                    </button>
+                  )}
+                </div>
+              </div>
             </div>
             <button className="btn-secondary-small" onClick={loadData}>
               <MdRefresh className="btn-icon" />
@@ -733,8 +1024,8 @@ const GestionReconocimientos = () => {
                     <th>Fecha</th>
                     <th>Remitente</th>
                     <th>Asunto</th>
-                    <th>Prioridad</th>
                     <th>Estado</th>
+                    <th>Público</th>
                     <th>Asignado a</th>
                     <th>Acciones</th>
                   </tr>
@@ -752,8 +1043,30 @@ const GestionReconocimientos = () => {
                       <td className="asunto-cell">
                         {comunicacion.descripcion.substring(0, 50)}...
                       </td>
-                      <td>{getPrioridadBadge(comunicacion.seguimiento?.prioridad)}</td>
-                      <td>{getEstadoBadge(comunicacion)}</td>
+                      <td>{getEstadoSemaforo(comunicacion)}</td>
+                      <td style={{ textAlign: 'center' }}>
+                        {comunicacion.mostrar_publico ? (
+                          <span style={{ 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            gap: '0.25rem',
+                            color: '#2196F3',
+                            fontWeight: 'bold'
+                          }} title="Visible públicamente">
+                            <MdPublic /> Público
+                          </span>
+                        ) : (
+                          <span style={{ 
+                            display: 'inline-flex', 
+                            alignItems: 'center', 
+                            gap: '0.25rem',
+                            color: '#999',
+                            fontWeight: 'normal'
+                          }} title="No visible públicamente">
+                            <MdPublicOff /> Privado
+                          </span>
+                        )}
+                      </td>
                       <td>{comunicacion.responsable || 'Sin asignar'}</td>
                       <td>
                         <div className="action-buttons">
@@ -823,11 +1136,12 @@ const GestionReconocimientos = () => {
                       </div>
                       <div className="modal-info-row">
                         <span className="modal-label">Estado Actual:</span>
-                        <span className="modal-value">{getEstadoBadge(selectedComunicacion)}</span>
-                      </div>
-                      <div className="modal-info-row">
-                        <span className="modal-label">Prioridad:</span>
-                        <span className="modal-value">{getPrioridadBadge(selectedComunicacion.seguimiento?.prioridad)}</span>
+                        <span className="modal-value">
+                          <div style={{ display: 'flex', alignItems: 'center', gap: '1rem' }}>
+                            {getEstadoSemaforo(selectedComunicacion)}
+                            {getEstadoBadge(selectedComunicacion)}
+                          </div>
+                        </span>
                       </div>
                       <div className="modal-info-row">
                         <span className="modal-label">Responsable:</span>
@@ -957,55 +1271,223 @@ const GestionReconocimientos = () => {
                 )}
                 {modalMode === 'estado' && (
                   <div className="modal-section">
-                    <div className="form-group">
-                      <label>Nuevo Estado</label>
-                      <select
-                        value={nuevoEstado}
-                        onChange={(e) => setNuevoEstado(Number(e.target.value))}
-                      >
-                        {estados.map((estado) => (
-                          <option key={estado.id_estado} value={estado.id_estado}>
-                            {estado.nombre_estado}
-                          </option>
-                        ))}
-                      </select>
+                    {/* Preview del cambio de estado */}
+                    {selectedComunicacion && (
+                      <div className="estado-preview-card">
+                        <div className="preview-header">
+                          <MdInfo className="preview-icon" />
+                          <span>Cambio de Estado</span>
+                        </div>
+                        <div className="preview-content">
+                          <div className="preview-item">
+                            <span className="preview-label">Estado Actual:</span>
+                            <span className={`badge badge-${selectedComunicacion.estado?.nombre_estado?.toLowerCase().replace(' ', '-') || 'pendiente'}`}>
+                              {selectedComunicacion.estado?.nombre_estado || 'Pendiente'}
+                            </span>
+                          </div>
+                          <MdArrowForward className="preview-arrow" />
+                          <div className="preview-item">
+                            <span className="preview-label">Nuevo Estado:</span>
+                            <span className={`badge badge-${estados.find(e => e.id_estado === nuevoEstado)?.nombre_estado?.toLowerCase().replace(' ', '-') || 'pendiente'}`}>
+                              {estados.find(e => e.id_estado === nuevoEstado)?.nombre_estado || 'Pendiente'}
+                            </span>
+                          </div>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Formulario de cambio */}
+                    <div className="form-grid">
+                      <div className="form-group">
+                        <label htmlFor="nuevo-estado">
+                          <MdAssignment className="form-icon" />
+                          Nuevo Estado <span className="required">*</span>
+                        </label>
+                        <select
+                          id="nuevo-estado"
+                          value={nuevoEstado}
+                          onChange={(e) => setNuevoEstado(Number(e.target.value))}
+                          className="form-select"
+                        >
+                          {estados.map((estado) => (
+                            <option key={estado.id_estado} value={estado.id_estado}>
+                              {estado.nombre_estado}
+                            </option>
+                          ))}
+                        </select>
+                        <small className="form-help-text">
+                          Seleccione el nuevo estado de la comunicación
+                        </small>
+                      </div>
+
+                      {/* Prioridad solo para quejas y sugerencias, no para reconocimientos */}
+                      {selectedComunicacion.tipo !== 'Reconocimiento' && (
+                        <div className="form-group">
+                          <label htmlFor="nueva-prioridad">
+                            <MdPriorityHigh className="form-icon" />
+                            Prioridad <span className="required">*</span>
+                          </label>
+                          <select
+                            id="nueva-prioridad"
+                            value={nuevaPrioridad}
+                            onChange={(e) => setNuevaPrioridad(e.target.value as 'Baja' | 'Media' | 'Alta' | 'Urgente')}
+                            className="form-select"
+                          >
+                            <option value="Baja">Baja</option>
+                            <option value="Media">Media</option>
+                            <option value="Alta">Alta</option>
+                            <option value="Urgente">Urgente</option>
+                          </select>
+                          <small className="form-help-text">
+                            Asigne la prioridad según la urgencia del caso
+                          </small>
+                        </div>
+                      )}
+
+                      <div className="form-group">
+                        <label htmlFor="nuevo-responsable">
+                          <MdPerson className="form-icon" />
+                          Responsable
+                        </label>
+                        <input
+                          id="nuevo-responsable"
+                          type="text"
+                          value={nuevoResponsable}
+                          onChange={(e) => setNuevoResponsable(e.target.value)}
+                          placeholder="Nombre del responsable o área"
+                          className="form-input"
+                        />
+                        <small className="form-help-text">
+                          Indique quién se encargará de esta comunicación
+                        </small>
+                      </div>
+
+                      <div className="form-group form-group-full">
+                        <label htmlFor="nuevas-notas">
+                          <MdNotes className="form-icon" />
+                          Notas y Comentarios
+                          {(estados.find(e => e.id_estado === nuevoEstado)?.nombre_estado === 'Atendida' || 
+                            estados.find(e => e.id_estado === nuevoEstado)?.nombre_estado === 'Cerrada') && (
+                            <span className="required">*</span>
+                          )}
+                        </label>
+                        <textarea
+                          id="nuevas-notas"
+                          value={nuevasNotas}
+                          onChange={(e) => setNuevasNotas(e.target.value)}
+                          rows={5}
+                          placeholder="Notas sobre el cambio de estado, acciones tomadas, solución aplicada, etc. Estas notas serán visibles para el usuario cuando el estado sea 'Atendida' o 'Cerrada'."
+                          className="form-textarea"
+                          maxLength={1000}
+                        />
+                        <div className="form-footer">
+                          <small className="form-help-text">
+                            {(estados.find(e => e.id_estado === nuevoEstado)?.nombre_estado === 'Atendida' || 
+                              estados.find(e => e.id_estado === nuevoEstado)?.nombre_estado === 'Cerrada') && (
+                              <span className="help-important">
+                                <MdInfo className="help-icon" />
+                                Estas notas serán visibles para el usuario. Proporcione información clara sobre la solución o respuesta.
+                              </span>
+                            )}
+                            {(!estados.find(e => e.id_estado === nuevoEstado)?.nombre_estado || 
+                              (estados.find(e => e.id_estado === nuevoEstado)?.nombre_estado !== 'Atendida' && 
+                               estados.find(e => e.id_estado === nuevoEstado)?.nombre_estado !== 'Cerrada')) && (
+                              <span>Notas internas sobre el cambio de estado</span>
+                            )}
+                          </small>
+                          <small className="character-count">
+                            {nuevasNotas.length}/1000 caracteres
+                          </small>
+                        </div>
+                      </div>
                     </div>
-                    <div className="form-group">
-                      <label>Prioridad</label>
-                      <select
-                        value={nuevaPrioridad}
-                        onChange={(e) => setNuevaPrioridad(e.target.value as 'Baja' | 'Media' | 'Alta' | 'Urgente')}
-                      >
-                        <option value="Baja">Baja</option>
-                        <option value="Media">Media</option>
-                        <option value="Alta">Alta</option>
-                        <option value="Urgente">Urgente</option>
-                      </select>
+
+                    {/* Checkbox para mostrar públicamente (solo para reconocimientos) */}
+                    {selectedComunicacion.tipo === 'Reconocimiento' && (
+                      <div className="form-group form-group-full">
+                        <div style={{
+                          display: 'flex',
+                          alignItems: 'center',
+                          gap: '0.75rem',
+                          padding: '1rem',
+                          background: '#e7f3ff',
+                          borderRadius: '8px',
+                          border: '2px solid #2196F3',
+                          cursor: 'pointer',
+                          transition: 'all 0.3s ease'
+                        }}
+                        onClick={() => setMostrarPublico(!mostrarPublico)}
+                        onMouseEnter={(e) => {
+                          e.currentTarget.style.background = '#d1e7ff';
+                        }}
+                        onMouseLeave={(e) => {
+                          e.currentTarget.style.background = '#e7f3ff';
+                        }}
+                        >
+                          <input
+                            type="checkbox"
+                            id="mostrar-publico"
+                            checked={mostrarPublico}
+                            onChange={(e) => setMostrarPublico(e.target.checked)}
+                            style={{
+                              width: '20px',
+                              height: '20px',
+                              cursor: 'pointer'
+                            }}
+                          />
+                          <label htmlFor="mostrar-publico" style={{ 
+                            cursor: 'pointer', 
+                            display: 'flex', 
+                            alignItems: 'center', 
+                            gap: '0.5rem',
+                            margin: 0,
+                            flex: 1
+                          }}>
+                            {mostrarPublico ? (
+                              <MdPublic style={{ color: '#2196F3', fontSize: '1.5rem' }} />
+                            ) : (
+                              <MdPublicOff style={{ color: '#999', fontSize: '1.5rem' }} />
+                            )}
+                            <div>
+                              <strong style={{ color: '#1976D2', fontSize: '1rem' }}>
+                                Mostrar en la página pública de Felicitaciones y Reconocimientos
+                              </strong>
+                              <p style={{ margin: '0.25rem 0 0 0', color: '#555', fontSize: '0.9rem' }}>
+                                Al activar esta opción, este reconocimiento será visible para todos los usuarios en la página de reconocimientos.
+                              </p>
+                            </div>
+                          </label>
+                        </div>
+                      </div>
+                    )}
+
+                    {/* Información adicional */}
+                    <div className="form-info-box">
+                      <MdInfo className="info-icon" />
+                      <div className="info-content">
+                        <strong>Importante:</strong>
+                        <ul>
+                          <li>Los cambios se guardarán en el historial de estados</li>
+                          <li>Si el estado es "Atendida" o "Cerrada", las notas serán visibles para el usuario</li>
+                          {selectedComunicacion.tipo === 'Reconocimiento' ? (
+                            <>
+                              <li>Los reconocimientos no requieren prioridad, ya que son mensajes positivos para destacar el buen trabajo</li>
+                              <li>Puede seleccionar si desea mostrar este reconocimiento en la página pública de Felicitaciones y Reconocimientos</li>
+                            </>
+                          ) : (
+                            <li>Asigne la prioridad según la urgencia del caso</li>
+                          )}
+                          <li>La fecha de resolución se establecerá automáticamente</li>
+                        </ul>
+                      </div>
                     </div>
-                    <div className="form-group">
-                      <label>Responsable</label>
-                      <input
-                        type="text"
-                        value={nuevoResponsable}
-                        onChange={(e) => setNuevoResponsable(e.target.value)}
-                        placeholder="Nombre del responsable"
-                      />
-                    </div>
-                    <div className="form-group">
-                      <label>Notas</label>
-                      <textarea
-                        value={nuevasNotas}
-                        onChange={(e) => setNuevasNotas(e.target.value)}
-                        rows={4}
-                        placeholder="Notas sobre el cambio de estado..."
-                      />
-                    </div>
+
                     <div className="modal-actions">
-                      <button className="btn-primary" onClick={handleGuardarEstado}>
-                        Guardar Cambio
-                      </button>
                       <button className="btn-secondary" onClick={() => setShowModal(false)}>
-                        Cancelar
+                        <MdClose /> Cancelar
+                      </button>
+                      <button className="btn-primary" onClick={handleGuardarEstado}>
+                        <MdCheckCircle /> Guardar Cambio
                       </button>
                     </div>
                   </div>

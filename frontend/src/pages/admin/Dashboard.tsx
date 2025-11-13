@@ -2,6 +2,7 @@ import { useState, useEffect, useCallback } from 'react';
 import { useNavigate, useLocation } from 'react-router-dom';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import AdminLayout from '../../components/admin/AdminLayout';
+import Semaforo, { mapEstadoToSemaforo } from '../../components/common/Semaforo';
 import { MdWarning, MdLightbulb, MdStar, MdSchedule, MdVisibility, MdTrendingUp, MdError, MdCheckCircle, MdRefresh } from 'react-icons/md';
 import { comunicacionService } from '../../services/comunicacionService';
 import { seguimientoService } from '../../services/seguimientoService';
@@ -203,6 +204,12 @@ const Dashboard = () => {
     const prioridadActual = prioridad || 'Media';
     const prioridadClass = prioridadActual.toLowerCase();
     return <span className={`badge badge-prioridad badge-${prioridadClass}`}>{prioridadActual}</span>;
+  };
+
+  const getEstadoSemaforo = (comunicacion: ComunicacionConEstado) => {
+    const estadoNombre = comunicacion.estado?.nombre_estado || 'Pendiente';
+    const estadoSemaforo = mapEstadoToSemaforo(estadoNombre);
+    return <Semaforo estado={estadoSemaforo} showLabel={true} size="small" className="horizontal" />;
   };
 
   return (
@@ -445,9 +452,7 @@ const Dashboard = () => {
                           {getPrioridadBadge(com.seguimiento?.prioridad)}
                         </td>
                         <td>
-                          <span className={`badge badge-${com.estado?.nombre_estado?.toLowerCase().replace(' ', '-') || 'pendiente'}`}>
-                            {com.estado?.nombre_estado || 'Pendiente'}
-                          </span>
+                          {getEstadoSemaforo(com)}
                         </td>
                         <td className="descripcion-cell">
                           {com.descripcion.substring(0, 50)}

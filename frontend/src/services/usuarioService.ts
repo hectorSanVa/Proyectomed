@@ -13,6 +13,11 @@ export const usuarioService = {
     return response.data;
   },
 
+  getByCorreo: async (correo: string) => {
+    const response = await api.get(`${API_ENDPOINTS.usuarios}/correo/${encodeURIComponent(correo)}`);
+    return response.data;
+  },
+
   create: async (data: Usuario) => {
     const response = await api.post(API_ENDPOINTS.usuarios, data);
     return response.data;

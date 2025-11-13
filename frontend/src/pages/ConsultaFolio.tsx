@@ -4,7 +4,7 @@ import UserLayout from '../components/user/UserLayout';
 import { comunicacionService } from '../services/comunicacionService';
 import { seguimientoService } from '../services/seguimientoService';
 import { estadoService } from '../services/estadoService';
-import type { Comunicacion, Estado } from '../types';
+import type { Comunicacion, Estado, Seguimiento } from '../types';
 import './ConsultaFolio.css';
 
 const ConsultaFolio = () => {
@@ -14,6 +14,7 @@ const ConsultaFolio = () => {
   const [folio, setFolio] = useState(folioFromUrl);
   const [comunicacion, setComunicacion] = useState<Comunicacion | null>(null);
   const [estado, setEstado] = useState<Estado | null>(null);
+  const [seguimiento, setSeguimiento] = useState<Seguimiento | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
 
@@ -42,19 +43,22 @@ const ConsultaFolio = () => {
         
         // Obtener estado real del seguimiento
         try {
-          const seguimiento = await seguimientoService.getByComunicacionId(resultado.id_comunicacion!);
-          if (seguimiento) {
+          const seguimientoData = await seguimientoService.getByComunicacionId(resultado.id_comunicacion!);
+          if (seguimientoData) {
+            setSeguimiento(seguimientoData);
             const estados = await estadoService.getAll();
-            const estadoEncontrado = estados.find((e: Estado) => e.id_estado === seguimiento.id_estado);
+            const estadoEncontrado = estados.find((e: Estado) => e.id_estado === seguimientoData.id_estado);
             setEstado(estadoEncontrado || null);
           } else {
             // Si no hay seguimiento, buscar estado "Pendiente"
+            setSeguimiento(null);
             const estados = await estadoService.getAll();
             const pendiente = estados.find((e: Estado) => e.nombre_estado === 'Pendiente');
             setEstado(pendiente || null);
           }
         } catch {
           // Si hay error al cargar el estado, usar "Pendiente" por defecto
+          setSeguimiento(null);
           const estados = await estadoService.getAll();
           const pendiente = estados.find((e: Estado) => e.nombre_estado === 'Pendiente');
           setEstado(pendiente || null);
@@ -63,13 +67,28 @@ const ConsultaFolio = () => {
         setError('No se encontró ninguna comunicación con ese folio');
         setComunicacion(null);
         setEstado(null);
+        setSeguimiento(null);
       }
     } catch (err: any) {
       setError('Error al buscar el folio. Por favor, intente nuevamente.');
       setComunicacion(null);
       setEstado(null);
+      setSeguimiento(null);
     } finally {
       setLoading(false);
+    }
+  };
+
+  const formatFecha = (fecha: string | Date | undefined) => {
+    if (!fecha) return 'N/A';
+    try {
+      const date = new Date(fecha);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return 'N/A';
     }
   };
 
@@ -153,6 +172,35 @@ const ConsultaFolio = () => {
                     {comunicacion.descripcion}
                   </div>
                 </div>
+
+                {/* Mostrar notas/comentarios si el estado es Atendida o Cerrada y hay notas */}
+                {estado && (estado.nombre_estado === 'Atendida' || estado.nombre_estado === 'Cerrada') && 
+                 seguimiento?.notas && seguimiento.notas.trim().length > 0 && (
+                  <div className="resultado-row full-width">
+                    <span className="resultado-label">Respuesta/Comentarios:</span>
+                    <div className="resultado-respuesta">
+                      <div className="respuesta-content">
+                        {seguimiento.notas}
+                      </div>
+                      {seguimiento.fecha_resolucion && (
+                        <div className="respuesta-fecha">
+                          Resuelto el: {formatFecha(seguimiento.fecha_resolucion)}
+                        </div>
+                      )}
+                    </div>
+                  </div>
+                )}
+
+                {/* Mostrar mensaje si está atendida/cerrada pero sin notas */}
+                {estado && (estado.nombre_estado === 'Atendida' || estado.nombre_estado === 'Cerrada') && 
+                 (!seguimiento?.notas || !seguimiento.notas.trim()) && (
+                  <div className="resultado-row full-width">
+                    <span className="resultado-label">Respuesta/Comentarios:</span>
+                    <div className="resultado-sin-respuesta">
+                      Sin comentarios disponibles aún.
+                    </div>
+                  </div>
+                )}
               </div>
 
               <div className="resultado-nota">

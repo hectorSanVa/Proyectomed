@@ -23,6 +23,18 @@ export class UsuarioController {
     }
   }
 
+  static async getByCorreo(req: Request, res: Response) {
+    try {
+      const correo = decodeURIComponent(req.params.correo);
+      const usuario = await UsuarioService.getByCorreo(correo);
+      if (!usuario)
+        return res.status(404).json({ error: "Usuario no encontrado" });
+      res.json(usuario);
+    } catch (error) {
+      res.status(400).json({ error: (error as Error).message });
+    }
+  }
+
   static async create(req: Request, res: Response) {
     try {
       const usuario = await UsuarioService.create(req.body);

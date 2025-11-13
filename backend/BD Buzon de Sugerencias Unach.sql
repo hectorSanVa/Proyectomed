@@ -1,8 +1,11 @@
 -- =========================
 -- CREACIÓN DE BASE DE DATOS
 -- =========================
-CREATE DATABASE buzon_sugerencias;
+CREATE DATABASE buzon_sugerencias WITH ENCODING 'UTF8' LC_COLLATE='es_MX.UTF-8' LC_CTYPE='es_MX.UTF-8';
 \c buzon_sugerencias;
+
+-- Configurar codificación UTF-8 para la sesión
+SET client_encoding = 'UTF8';
 
 -- =========================
 -- TABLA DE USUARIOS
@@ -61,7 +64,8 @@ CREATE TABLE comunicaciones (
     descripcion TEXT NOT NULL,
     fecha_recepcion DATE DEFAULT CURRENT_DATE,
     area_involucrada VARCHAR(150),
-    medio CHAR(1) CHECK (medio IN ('F','D')) DEFAULT 'D'
+    medio CHAR(1) CHECK (medio IN ('F','D')) DEFAULT 'D',
+    mostrar_publico BOOLEAN DEFAULT FALSE
 );
 
 -- =========================
@@ -190,4 +194,13 @@ FROM comunicaciones c
 JOIN seguimiento s ON c.id_comunicacion = s.id_comunicacion
 JOIN estados e ON s.id_estado = e.id_estado
 GROUP BY c.id_categoria, e.nombre_estado;
+
+-- =================
+--     Índices
+-- =================
+
+-- Índice para mejorar el rendimiento de consultas de reconocimientos públicos
+CREATE INDEX IF NOT EXISTS idx_comunicaciones_mostrar_publico 
+ON comunicaciones(tipo, mostrar_publico) 
+WHERE tipo = 'Reconocimiento';
 

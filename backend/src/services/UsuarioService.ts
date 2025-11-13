@@ -10,10 +10,29 @@ export class UsuarioService {
     return await UsuarioDAO.getById(id);
   }
 
-  static async create(usuario: Omit<Usuario, "id_usuario">): Promise<Usuario> {
-    if (!usuario.nombre || !usuario.correo) {
-      throw new Error("El nombre y correo son obligatorios");
+  static async getByCorreo(correo: string): Promise<Usuario | null> {
+    if (!correo || !correo.includes('@')) {
+      throw new Error("Correo electrónico inválido");
     }
+    return await UsuarioDAO.getByCorreo(correo);
+  }
+
+  /**
+   * Crear o obtener usuario por correo para seguimiento de comunicaciones
+   * Crea un usuario mínimo con solo el correo si no existe
+   */
+  static async createOrGetByCorreo(correo: string): Promise<Usuario> {
+    if (!correo || !correo.includes('@')) {
+      throw new Error("Correo electrónico inválido");
+    }
+    return await UsuarioDAO.createOrGetByCorreo(correo);
+  }
+
+  static async create(usuario: Omit<Usuario, "id_usuario">): Promise<Usuario> {
+    if (!usuario.correo) {
+      throw new Error("El correo es obligatorio");
+    }
+    // El nombre puede ser opcional, se genera automáticamente si no se proporciona
     return await UsuarioDAO.create(usuario);
   }
 

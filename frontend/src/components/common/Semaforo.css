@@ -1,0 +1,136 @@
+.semaforo-container {
+  display: inline-flex;
+  align-items: center;
+  gap: 0.5rem;
+  flex-direction: column;
+}
+
+.semaforo-container.small {
+  gap: 0.25rem;
+}
+
+.semaforo-container.large {
+  gap: 0.75rem;
+}
+
+.semaforo-visual {
+  display: flex;
+  flex-direction: column;
+  gap: 0.25rem;
+  padding: 0.5rem;
+  background: #f8f9fa;
+  border: 2px solid #dee2e6;
+  border-radius: 8px;
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+}
+
+.semaforo-container.small .semaforo-visual {
+  padding: 0.25rem;
+  gap: 0.15rem;
+}
+
+.semaforo-container.large .semaforo-visual {
+  padding: 0.75rem;
+  gap: 0.35rem;
+}
+
+.semaforo-luz {
+  width: 20px;
+  height: 20px;
+  border-radius: 50%;
+  border: 2px solid rgba(0, 0, 0, 0.2);
+  transition: all 0.3s ease;
+  position: relative;
+  box-shadow: inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.semaforo-container.small .semaforo-luz {
+  width: 12px;
+  height: 12px;
+}
+
+.semaforo-container.large .semaforo-luz {
+  width: 28px;
+  height: 28px;
+}
+
+.semaforo-luz.inactiva {
+  opacity: 0.3;
+  background-color: #e9ecef;
+}
+
+.semaforo-luz.activa {
+  opacity: 1;
+  box-shadow: 
+    inset 0 2px 4px rgba(0, 0, 0, 0.2),
+    0 0 8px currentColor,
+    0 0 12px currentColor;
+}
+
+.luz-roja.activa {
+  background-color: #dc3545;
+  border-color: #c82333;
+  color: #dc3545;
+}
+
+.luz-amarilla.activa {
+  background-color: #ffc107;
+  border-color: #e0a800;
+  color: #ffc107;
+}
+
+.luz-verde.activa {
+  background-color: #28a745;
+  border-color: #218838;
+  color: #28a745;
+}
+
+.semaforo-label {
+  font-size: 0.85rem;
+  font-weight: bold;
+  text-align: center;
+  white-space: nowrap;
+}
+
+.semaforo-container.small .semaforo-label {
+  font-size: 0.75rem;
+}
+
+.semaforo-container.large .semaforo-label {
+  font-size: 1rem;
+}
+
+/* Variante horizontal para tablas */
+.semaforo-container.horizontal {
+  flex-direction: row;
+  gap: 0.5rem;
+}
+
+.semaforo-container.horizontal .semaforo-visual {
+  flex-direction: row;
+}
+
+/* Animación de pulso para el estado activo */
+@keyframes pulse {
+  0%, 100% {
+    opacity: 1;
+    transform: scale(1);
+  }
+  50% {
+    opacity: 0.8;
+    transform: scale(1.05);
+  }
+}
+
+.semaforo-luz.activa {
+  animation: pulse 2s ease-in-out infinite;
+}
+
+/* Efecto hover para mejor UX */
+.semaforo-container:hover .semaforo-luz.activa {
+  animation-duration: 1s;
+}
+
+
+
+

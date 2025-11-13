@@ -47,5 +47,29 @@ export const evidenciaService = {
     const response = await api.delete(`${API_ENDPOINTS.evidencias}/${id}`);
     return response.data;
   },
+
+  // Subir PDF generado desde el frontend
+  uploadPDF: async (idComunicacion: number, pdfBlob: Blob, fileName: string) => {
+    const formData = new FormData();
+    // Convertir Blob a File para poder enviarlo
+    const pdfFile = new File([pdfBlob], fileName, { type: 'application/pdf' });
+    formData.append('archivo', pdfFile);
+    formData.append('id_comunicacion', idComunicacion.toString());
+    
+    const response = await api.post(API_ENDPOINTS.evidencias, formData);
+    return response.data;
+  },
+
+  // Obtener PDFs guardados de una comunicación
+  getPDFsByComunicacion: async (idComunicacion: number) => {
+    try {
+      const evidencias = await evidenciaService.getByComunicacionId(idComunicacion);
+      // Filtrar solo PDFs
+      return evidencias.filter((ev: Evidencia) => ev.tipo_archivo === 'PDF');
+    } catch (error) {
+      console.error('Error al obtener PDFs:', error);
+      return [];
+    }
+  },
 };
 

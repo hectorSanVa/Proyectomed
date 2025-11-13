@@ -1,4 +1,5 @@
 import { MdLock, MdEmojiEvents } from 'react-icons/md';
+import logoDerecho from '../../assets/img/logosuperiorderecho.png';
 import './AdminHeader.css';
 
 const AdminHeader = () => {
@@ -6,14 +7,17 @@ const AdminHeader = () => {
     <header className="admin-header">
       <div className="admin-header-content">
         <div className="admin-header-left">
-          <span className="header-logo-text">UNACH</span>
-          <span className="header-admin-text">ADMIN</span>
+          <img 
+            src={logoDerecho} 
+            alt="Logo UNACH" 
+            className="header-logo-left"
+          />
         </div>
         <div className="admin-header-center">
           <h1 className="header-title">
             Facultad de Medicina Humana "Dr. Manuel Velasco Suárez"
           </h1>
-          <p className="header-motto">Educación que transforma</p>
+          <p className="header-motto">Por la conciencia de la necesidad de servir</p>
         </div>
         <div className="admin-header-right">
           <button className="admin-btn">

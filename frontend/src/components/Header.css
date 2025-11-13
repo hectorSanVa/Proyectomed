@@ -20,10 +20,24 @@
   align-items: center;
 }
 
+.header-logo-left {
+  height: 90px;
+  width: auto;
+  max-width: 250px;
+  object-fit: contain;
+  filter: drop-shadow(0 2px 4px rgba(0, 0, 0, 0.2));
+  transition: transform 0.3s ease;
+}
+
+.header-logo-left:hover {
+  transform: scale(1.05);
+}
+
 .header-logo-text {
   font-size: 1rem;
   color: var(--unach-dorado);
   font-weight: bold;
+  display: block;
 }
 
 .header-center {
@@ -99,6 +113,11 @@
     flex-direction: column;
     gap: 0.5rem;
     text-align: center;
+  }
+
+  .header-logo-left {
+    height: 70px;
+    max-width: 200px;
   }
 
   .header-title h1 {

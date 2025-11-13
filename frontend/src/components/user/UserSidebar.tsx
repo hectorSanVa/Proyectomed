@@ -10,6 +10,7 @@ import {
   MdSearch
 } from 'react-icons/md';
 import { useUsuarioAuth } from '../../context/UsuarioAuthContext';
+import logoIzquierdo from '../../assets/img/logosuperiorizquiero.png';
 import './UserSidebar.css';
 
 const UserSidebar = () => {
@@ -25,8 +26,11 @@ const UserSidebar = () => {
     <aside className="user-sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <span className="logo-text">FMH</span>
-          <span className="logo-unach">UNACH</span>
+          <img 
+            src={logoIzquierdo} 
+            alt="Logo UNACH" 
+            className="sidebar-logo-img"
+          />
         </div>
       </div>
 
@@ -48,7 +52,7 @@ const UserSidebar = () => {
 
         <NavLink to="/reconocimientos" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
           <MdStar className="nav-icon" />
-          <span>Reconocimientos</span>
+          <span>Felicitaciones y Reconocimientos</span>
         </NavLink>
 
         <NavLink to="/contacto" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>

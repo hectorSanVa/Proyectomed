@@ -5,11 +5,13 @@ import {
   MdLightbulb, 
   MdStar, 
   MdBarChart, 
+  MdList,
   MdSettings,
   MdHome,
   MdExitToApp
 } from 'react-icons/md';
 import { useAuth } from '../../context/AuthContext';
+import logoIzquierdo from '../../assets/img/logosuperiorizquiero.png';
 import './Sidebar.css';
 
 const Sidebar = () => {
@@ -25,7 +27,11 @@ const Sidebar = () => {
     <aside className="admin-sidebar">
       <div className="sidebar-header">
         <div className="sidebar-logo">
-          <span className="logo-text">UNACH</span>
+          <img 
+            src={logoIzquierdo} 
+            alt="Logo UNACH" 
+            className="sidebar-logo-img"
+          />
           <span className="logo-admin">ADMIN</span>
         </div>
       </div>
@@ -48,12 +54,17 @@ const Sidebar = () => {
 
         <NavLink to="/admin/reconocimientos" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
           <MdStar className="nav-icon" />
-          <span>Gestión de Reconocimientos</span>
+          <span>Felicitaciones y Reconocimientos</span>
         </NavLink>
 
         <NavLink to="/admin/reportes" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
           <MdBarChart className="nav-icon" />
           <span>Reportes y Estadísticas</span>
+        </NavLink>
+
+        <NavLink to="/admin/concentrado-seguimiento" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>
+          <MdList className="nav-icon" />
+          <span>Concentrado de Seguimiento</span>
         </NavLink>
 
         <NavLink to="/admin/configuracion" className={({ isActive }) => isActive ? 'nav-item active' : 'nav-item'}>

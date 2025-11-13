@@ -19,6 +19,7 @@ import GestionSugerencias from './pages/admin/GestionSugerencias';
 import GestionReconocimientos from './pages/admin/GestionReconocimientos';
 // import GestionUsuarios from './pages/admin/GestionUsuarios'; // Deshabilitado - todas las comunicaciones son anónimas
 import Reportes from './pages/admin/Reportes';
+import ConcentradoSeguimiento from './pages/admin/ConcentradoSeguimiento';
 import Configuracion from './pages/admin/Configuracion';
 import './App.css';
 
@@ -83,6 +84,14 @@ function App() {
               element={
                 <ProtectedRoute>
                   <Reportes />
+                </ProtectedRoute>
+              }
+            />
+            <Route
+              path="/admin/concentrado-seguimiento"
+              element={
+                <ProtectedRoute>
+                  <ConcentradoSeguimiento />
                 </ProtectedRoute>
               }
             />

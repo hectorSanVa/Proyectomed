@@ -124,18 +124,23 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
         return;
       }
 
-      // IMPORTANTE: NUNCA crear registros de usuario - TODAS las comunicaciones son anónimas
-      // Esto garantiza que nadie tenga miedo a represalias
-      const userId: number | null = null;
+      // Lógica de anonimato y seguimiento:
+      // - Si confidencial = true → Comunicación completamente anónima (id_usuario = null)
+      // - Si confidencial = false y hay correo → Crear/obtener usuario para seguimiento
+      const correoUsuario = usuario?.correo || correo || null;
+      const esAnonimo = confidencial || !correoUsuario; // Anónimo si está marcado como confidencial o no hay correo
 
       // Crear comunicación
+      // El backend se encargará de crear/obtener el usuario si no es anónimo
       const comunicacionData: ComunicacionCreate = {
         tipo: tipoComunicacion,
-        id_usuario: userId,
+        id_usuario: null, // El backend lo asignará si no es anónimo
         id_categoria: categoria,
         descripcion,
         area_involucrada: areaInvolucrada,
         medio: 'D', // Digital
+        correo: correoUsuario || undefined, // Correo para crear/obtener usuario si no es anónimo
+        anonimo: esAnonimo // Indicar si es anónimo o no
       };
 
       const comunicacion = await comunicacionService.create(comunicacionData);
@@ -157,13 +162,32 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
       setCountdown(10);
       showToast(`¡${tipoComunicacion} enviada exitosamente! Folio: ${comunicacion.folio}`, 'success');
 
+      // El folio y la asociación con el usuario (si no es anónimo) ya se guardaron en la base de datos
+      // Si la comunicación NO es anónima, el backend creó/obtuvo el usuario en la tabla usuarios
+      // y asoció la comunicación mediante id_usuario
+      // Solo guardamos el último folio en localStorage para referencia rápida (opcional)
+      try {
+        localStorage.setItem('ultimo_folio', comunicacion.folio);
+        if (esAnonimo) {
+          console.log('✅ Comunicación anónima guardada. Folio:', comunicacion.folio);
+        } else {
+          console.log('✅ Comunicación guardada con seguimiento. Folio:', comunicacion.folio, 'Correo:', correoUsuario);
+          console.log('✅ Usuario creado/obtenido en la tabla usuarios para seguimiento');
+        }
+      } catch (err) {
+        console.warn('⚠️ Error al guardar último folio en localStorage:', err);
+      }
+
       // Contador regresivo y redirección
       const interval = setInterval(() => {
         setCountdown((prev) => {
           if (prev <= 1) {
             clearInterval(interval);
             countdownIntervalRef.current = null;
-            navigate(`/consulta-folio?folio=${comunicacion.folio}`);
+            // Usar setTimeout para evitar el warning de React sobre actualizar durante el render
+            setTimeout(() => {
+              navigate(`/consulta-folio?folio=${encodeURIComponent(comunicacion.folio)}`);
+            }, 0);
             return 0;
           }
           return prev - 1;
@@ -220,7 +244,9 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
           <div className="formulario-main">
           <div className="formulario-wrapper">
           <h1 className="formulario-title">
-            Formato de Quejas, Sugerencias y Reconocimientos
+            {tipoComunicacion === 'Reconocimiento' 
+              ? 'Formato de Felicitaciones y Reconocimientos'
+              : 'Formato de Quejas, Sugerencias y Reconocimientos'}
           </h1>
           
           {error && (
@@ -230,120 +256,7 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
           )}
 
           <form onSubmit={handleSubmit} className="formulario-form">
-            {/* DATOS DEL REMITENTE */}
-            <section className="form-section">
-              <h2 className="section-title">Datos del Remitente</h2>
-              
-              <div className="form-group">
-                <label htmlFor="nombre">Nombre (Opcional)</label>
-                <input
-                  type="text"
-                  id="nombre"
-                  value={nombre}
-                  onChange={(e) => setNombre(e.target.value)}
-                  disabled={confidencial}
-                />
-              </div>
-
-              <div className="form-group">
-                <label htmlFor="correo">Correo electrónico</label>
-                <input
-                  type="email"
-                  id="correo"
-                  value={correo}
-                  onChange={(e) => setCorreo(e.target.value)}
-                  required={!confidencial}
-                  disabled={confidencial}
-                />
-              </div>
-
-              <div className="form-row">
-                <div className="form-group">
-                  <label htmlFor="semestre">Semestre/área de adscripción</label>
-                  <input
-                    type="text"
-                    id="semestre"
-                    value={semestreArea}
-                    onChange={(e) => setSemestreArea(e.target.value)}
-                    disabled={confidencial}
-                  />
-                </div>
-
-                <div className="form-group">
-                  <label htmlFor="telefono">Teléfono (opcional)</label>
-                  <input
-                    type="tel"
-                    id="telefono"
-                    value={telefono}
-                    onChange={(e) => setTelefono(e.target.value)}
-                    disabled={confidencial}
-                  />
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>Tipo de usuario</label>
-                <div className="checkbox-group">
-                  {(['Estudiante', 'Docente', 'Administrativo', 'Servicios Generales'] as const).map((tipo) => (
-                    <label key={tipo} className="checkbox-label">
-                      <input
-                        type="radio"
-                        name="tipoUsuario"
-                        value={tipo}
-                        checked={tipoUsuario === tipo}
-                        onChange={(e) => setTipoUsuario(e.target.value as Usuario['tipo_usuario'])}
-                        disabled={confidencial}
-                      />
-                      {tipo === 'Docente' ? 'Personal Docente' : tipo === 'Administrativo' ? 'Personal Administrativo' : tipo === 'Servicios Generales' ? 'Personal de servicios generales' : tipo}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label>(Solo para fines estadísticos) Sexo</label>
-                <div className="checkbox-group">
-                  {(['Mujer', 'Hombre', 'Prefiero no responder'] as const).map((s) => (
-                    <label key={s} className="checkbox-label">
-                      <input
-                        type="radio"
-                        name="sexo"
-                        value={s}
-                        checked={sexo === s}
-                        onChange={(e) => setSexo(e.target.value as Usuario['sexo'])}
-                        disabled={confidencial}
-                      />
-                      {s}
-                    </label>
-                  ))}
-                </div>
-              </div>
-
-              <div className="form-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={confidencial}
-                    onChange={(e) => setConfidencial(e.target.checked)}
-                  />
-                  Deseo que mi identidad sea confidencial
-                </label>
-              </div>
-
-              <div className="form-group">
-                <label className="checkbox-label">
-                  <input
-                    type="checkbox"
-                    checked={autorizoContacto}
-                    onChange={(e) => setAutorizoContacto(e.target.checked)}
-                    disabled={confidencial}
-                  />
-                  Autorizo que me contacten para dar seguimiento a mi caso
-                </label>
-              </div>
-            </section>
-
-            {/* TIPO DE COMUNICACIÓN */}
+            {/* TIPO DE COMUNICACIÓN - PRIMERO */}
             <section className="form-section">
               <h2 className="section-title">Tipo de Comunicación</h2>
               
@@ -400,6 +313,164 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
               </div>
             </section>
 
+            {/* DATOS DEL REMITENTE */}
+            <section className="form-section">
+              <h2 className="section-title">
+                {tipoComunicacion === 'Reconocimiento' ? 'Datos del Remitente (Opcional)' : 'Datos del Remitente'}
+              </h2>
+              
+              {tipoComunicacion === 'Reconocimiento' && (
+                <div style={{ 
+                  background: '#e7f3ff', 
+                  padding: '1rem', 
+                  borderRadius: '8px', 
+                  marginBottom: '1.5rem',
+                  borderLeft: '4px solid #2196F3'
+                }}>
+                  <p style={{ margin: 0, color: '#1976D2', fontSize: '0.95rem' }}>
+                    <strong>💡 Nota:</strong> Para reconocimientos, los datos del remitente son opcionales. 
+                    Puedes enviar el reconocimiento de forma anónima si lo prefieres.
+                  </p>
+                </div>
+              )}
+              
+              <div className="form-group">
+                <label htmlFor="nombre">Nombre {tipoComunicacion === 'Reconocimiento' ? '(Opcional)' : '(Opcional)'}</label>
+                <input
+                  type="text"
+                  id="nombre"
+                  value={nombre}
+                  onChange={(e) => setNombre(e.target.value)}
+                  disabled={confidencial}
+                />
+              </div>
+
+              <div className="form-group">
+                <label htmlFor="correo">
+                  Correo electrónico {!confidencial && tipoComunicacion !== 'Reconocimiento' && <span className="required">*</span>}
+                  {tipoComunicacion === 'Reconocimiento' && <span style={{ fontSize: '0.85rem', color: '#666', fontWeight: 'normal' }}> (Opcional)</span>}
+                </label>
+                <input
+                  type="email"
+                  id="correo"
+                  value={correo}
+                  onChange={(e) => setCorreo(e.target.value)}
+                  required={!confidencial && tipoComunicacion !== 'Reconocimiento'}
+                  disabled={confidencial}
+                  placeholder={confidencial ? "No requerido para comunicaciones anónimas" : tipoComunicacion === 'Reconocimiento' ? "Opcional - Para consultar el estado de tu reconocimiento" : "Para consultar el estado de tu comunicación"}
+                />
+                {!confidencial && (
+                  <small className="form-help-text">
+                    {tipoComunicacion === 'Reconocimiento' 
+                      ? "Tu correo se usará solo para consultar el estado de tu reconocimiento. Tu identidad permanece protegida."
+                      : "Tu correo se usará solo para consultar el estado de tu comunicación. Tu identidad permanece protegida."}
+                  </small>
+                )}
+              </div>
+
+              {tipoComunicacion !== 'Reconocimiento' && (
+                <>
+                  <div className="form-row">
+                    <div className="form-group">
+                      <label htmlFor="semestre">Semestre/área de adscripción</label>
+                      <input
+                        type="text"
+                        id="semestre"
+                        value={semestreArea}
+                        onChange={(e) => setSemestreArea(e.target.value)}
+                        disabled={confidencial}
+                      />
+                    </div>
+
+                    <div className="form-group">
+                      <label htmlFor="telefono">Teléfono (opcional)</label>
+                      <input
+                        type="tel"
+                        id="telefono"
+                        value={telefono}
+                        onChange={(e) => setTelefono(e.target.value)}
+                        disabled={confidencial}
+                      />
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>Tipo de usuario</label>
+                    <div className="checkbox-group">
+                      {(['Estudiante', 'Docente', 'Administrativo', 'Servicios Generales'] as const).map((tipo) => (
+                        <label key={tipo} className="checkbox-label">
+                          <input
+                            type="radio"
+                            name="tipoUsuario"
+                            value={tipo}
+                            checked={tipoUsuario === tipo}
+                            onChange={(e) => setTipoUsuario(e.target.value as Usuario['tipo_usuario'])}
+                            disabled={confidencial}
+                          />
+                          {tipo === 'Docente' ? 'Personal Docente' : tipo === 'Administrativo' ? 'Personal Administrativo' : tipo === 'Servicios Generales' ? 'Personal de servicios generales' : tipo}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+
+                  <div className="form-group">
+                    <label>(Solo para fines estadísticos) Sexo</label>
+                    <div className="checkbox-group">
+                      {(['Mujer', 'Hombre', 'Prefiero no responder'] as const).map((s) => (
+                        <label key={s} className="checkbox-label">
+                          <input
+                            type="radio"
+                            name="sexo"
+                            value={s}
+                            checked={sexo === s}
+                            onChange={(e) => setSexo(e.target.value as Usuario['sexo'])}
+                            disabled={confidencial}
+                          />
+                          {s}
+                        </label>
+                      ))}
+                    </div>
+                  </div>
+                </>
+              )}
+
+              <div className="form-group">
+                <label className="checkbox-label">
+                  <input
+                    type="checkbox"
+                    checked={confidencial}
+                    onChange={(e) => setConfidencial(e.target.checked)}
+                  />
+                  {tipoComunicacion === 'Reconocimiento' 
+                    ? 'Deseo que mi reconocimiento sea completamente anónimo (sin seguimiento por correo)'
+                    : 'Deseo que mi comunicación sea completamente anónima (sin seguimiento por correo)'}
+                </label>
+                <small className="form-help-text" style={{ display: 'block', marginTop: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
+                  {confidencial 
+                    ? tipoComunicacion === 'Reconocimiento'
+                      ? "✅ Tu reconocimiento será completamente anónimo. No se guardará tu correo y no podrás consultar su estado por correo, solo por folio."
+                      : "✅ Tu comunicación será completamente anónima. No se guardará tu correo y no podrás consultar su estado por correo, solo por folio."
+                    : tipoComunicacion === 'Reconocimiento'
+                      ? "ℹ️ Si proporcionas tu correo, podrás consultar el estado de tu reconocimiento iniciando sesión. Tu identidad permanece protegida."
+                      : "ℹ️ Si proporcionas tu correo, podrás consultar el estado de tu comunicación iniciando sesión. Tu identidad permanece protegida."}
+                </small>
+              </div>
+
+              {tipoComunicacion !== 'Reconocimiento' && (
+                <div className="form-group">
+                  <label className="checkbox-label">
+                    <input
+                      type="checkbox"
+                      checked={autorizoContacto}
+                      onChange={(e) => setAutorizoContacto(e.target.checked)}
+                      disabled={confidencial}
+                    />
+                    Autorizo que me contacten para dar seguimiento a mi caso
+                  </label>
+                </div>
+              )}
+            </section>
+
             {/* DETALLES */}
             <section className="form-section">
               <h2 className="section-title">
@@ -453,13 +524,23 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
               <div className="form-group">
                 <label htmlFor="descripcion">
                   {tipoComunicacion === 'Reconocimiento' 
-                    ? 'Descripción del reconocimiento' 
+                    ? 'Descripción del reconocimiento *' 
                     : 'Descripción de hechos'}
                 </label>
                 {tipoComunicacion === 'Reconocimiento' && (
-                  <p style={{ fontSize: '0.85rem', color: '#666', marginBottom: '0.5rem', fontStyle: 'italic' }}>
-                    Describe el trabajo, acción positiva o logro que deseas reconocer. Este reconocimiento puede ser publicado en la página web una vez aprobado por la Comisión.
-                  </p>
+                  <div style={{ 
+                    background: '#fff3cd', 
+                    padding: '0.75rem', 
+                    borderRadius: '6px', 
+                    marginBottom: '0.75rem',
+                    borderLeft: '4px solid #ffc107'
+                  }}>
+                    <p style={{ margin: 0, color: '#856404', fontSize: '0.9rem' }}>
+                      <strong>✨ Describe el trabajo, acción positiva o logro que deseas reconocer.</strong><br />
+                      Menciona el nombre de la persona o área reconocida, qué hizo y por qué merece ser reconocido. 
+                      Este reconocimiento puede ser publicado en la página web una vez aprobado por la Comisión.
+                    </p>
+                  </div>
                 )}
                 <textarea
                   id="descripcion"
@@ -470,9 +551,11 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
                     }
                   }}
                   maxLength={MAX_DESCRIPCION}
-                  rows={7}
+                  rows={tipoComunicacion === 'Reconocimiento' ? 8 : 7}
                   required
-                  placeholder="Describa detalladamente los hechos..."
+                  placeholder={tipoComunicacion === 'Reconocimiento' 
+                    ? "Ejemplo: Deseo reconocer al Dr. Juan Pérez del Departamento de Servicios Generales por su excelente atención y disposición para ayudar a los estudiantes. Su trabajo ha mejorado significativamente nuestra experiencia en la facultad..."
+                    : "Describa detalladamente los hechos..."}
                 />
                 <div className="character-counter">
                   <span className={descripcion.length > MAX_DESCRIPCION * 0.9 ? 'character-count-warning' : ''}>
@@ -487,37 +570,40 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
               </div>
             </section>
 
-            {/* PROPUESTA DE MEJORA */}
-            <section className="form-section">
-              <h2 className="section-title">Propuesta de mejora (opcional)</h2>
-              <div className="form-group">
-                <textarea
-                  id="propuestaMejora"
-                  value={propuestaMejora}
-                  onChange={(e) => {
-                    if (e.target.value.length <= MAX_PROPUESTA) {
-                      setPropuestaMejora(e.target.value);
-                    }
-                  }}
-                  maxLength={MAX_PROPUESTA}
-                  rows={6}
-                  placeholder="Si tiene alguna propuesta de mejora, descríbala aquí..."
-                />
-                <div className="character-counter">
-                  <span className={propuestaMejora.length > MAX_PROPUESTA * 0.9 ? 'character-count-warning' : ''}>
-                    {propuestaMejora.length}/{MAX_PROPUESTA} caracteres
-                  </span>
+            {/* PROPUESTA DE MEJORA - Solo para Quejas y Sugerencias */}
+            {tipoComunicacion !== 'Reconocimiento' && (
+              <section className="form-section">
+                <h2 className="section-title">Propuesta de mejora (opcional)</h2>
+                <div className="form-group">
+                  <textarea
+                    id="propuestaMejora"
+                    value={propuestaMejora}
+                    onChange={(e) => {
+                      if (e.target.value.length <= MAX_PROPUESTA) {
+                        setPropuestaMejora(e.target.value);
+                      }
+                    }}
+                    maxLength={MAX_PROPUESTA}
+                    rows={6}
+                    placeholder="Si tiene alguna propuesta de mejora, descríbala aquí..."
+                  />
+                  <div className="character-counter">
+                    <span className={propuestaMejora.length > MAX_PROPUESTA * 0.9 ? 'character-count-warning' : ''}>
+                      {propuestaMejora.length}/{MAX_PROPUESTA} caracteres
+                    </span>
+                  </div>
                 </div>
-              </div>
-            </section>
+              </section>
+            )}
 
             {/* EVIDENCIA */}
             <section className="form-section">
               <h2 className="section-title">Evidencia (Opcional)</h2>
               <div className="form-group">
                 <p className="form-note">
-                  Puede adjuntar documentos, imágenes o videos como evidencia. 
-                  Formatos permitidos: PDF, JPG, PNG, DOCX, XLSX, MP4 (máximo 10MB por archivo)
+                  {tipoComunicacion === 'Reconocimiento' 
+                    ? 'Puede adjuntar imágenes o videos que respalden el reconocimiento (fotos del evento, logro, etc.). Formatos permitidos: JPG, PNG, MP4 (máximo 10MB por archivo)'
+                    : 'Puede adjuntar documentos, imágenes o videos como evidencia. Formatos permitidos: PDF, JPG, PNG, DOCX, XLSX, MP4 (máximo 10MB por archivo)'}
                 </p>
               </div>
               <div className="form-group">
@@ -527,7 +613,7 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
                     type="file"
                     id="archivos"
                     multiple
-                    accept=".pdf,.jpg,.jpeg,.png,.docx,.xlsx,.mp4"
+                    accept={tipoComunicacion === 'Reconocimiento' ? ".jpg,.jpeg,.png,.mp4" : ".pdf,.jpg,.jpeg,.png,.docx,.xlsx,.mp4"}
                     onChange={(e) => {
                       const files = Array.from(e.target.files || []);
                       // Validar tamaño (10MB = 10 * 1024 * 1024 bytes)
@@ -581,9 +667,11 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
             {/* NOTA */}
             <div className="form-note-section">
               <p>
-                <strong>NOTA:</strong> Todas las quejas y sugerencias serán atendidas conforme al protocolo 
-                establecido por la Facultad de Medicina, garantizando la confidencialidad y el respeto a los 
-                derechos de los involucrados. Para dar seguimiento a su caso, puede comunicarse al correo: 
+                <strong>NOTA:</strong> {
+                  tipoComunicacion === 'Reconocimiento' 
+                    ? 'Los reconocimientos serán revisados por la Comisión y, si son aprobados, podrán ser publicados en la página web para exaltar el buen trabajo de las personas reconocidas. Para dar seguimiento a su reconocimiento, puede comunicarse al correo: '
+                    : 'Todas las quejas y sugerencias serán atendidas conforme al protocolo establecido por la Facultad de Medicina, garantizando la confidencialidad y el respeto a los derechos de los involucrados. Para dar seguimiento a su caso, puede comunicarse al correo: '
+                }
                 <strong> quejasysugerenciasfmht@unach.mx</strong>
               </p>
             </div>

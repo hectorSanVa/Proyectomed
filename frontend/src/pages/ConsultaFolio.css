@@ -184,6 +184,41 @@
   white-space: pre-wrap;
 }
 
+.resultado-respuesta {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background-color: #f0f9ff;
+  border-left: 3px solid #17a2b8;
+  border-radius: 4px;
+  line-height: 1.6;
+  white-space: pre-wrap;
+}
+
+.respuesta-content {
+  color: #333;
+  font-size: 0.95rem;
+  margin-bottom: 0.5rem;
+}
+
+.respuesta-fecha {
+  font-size: 0.85rem;
+  color: #666;
+  font-style: italic;
+  margin-top: 0.75rem;
+  padding-top: 0.75rem;
+  border-top: 1px solid #d1e7dd;
+}
+
+.resultado-sin-respuesta {
+  margin-top: 0.5rem;
+  padding: 1rem;
+  background-color: #f8f9fa;
+  border-radius: 4px;
+  color: #999;
+  font-style: italic;
+  font-size: 0.9rem;
+}
+
 .resultado-nota {
   background: #fff3cd;
   border-left: 4px solid var(--unach-dorado);

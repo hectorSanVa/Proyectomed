@@ -1,0 +1,220 @@
+.concentrado-container {
+  padding: 2rem;
+  max-width: 1400px;
+  margin: 0 auto;
+}
+
+.concentrado-header {
+  margin-bottom: 2rem;
+}
+
+.header-content {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  flex-wrap: wrap;
+  gap: 1rem;
+}
+
+.concentrado-header h1 {
+  font-size: 1.75rem;
+  font-weight: 600;
+  color: #333;
+  margin: 0;
+}
+
+.header-actions {
+  display: flex;
+  gap: 1rem;
+  align-items: center;
+}
+
+.filter-select {
+  padding: 0.5rem 1rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  font-size: 0.95rem;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  transition: all 0.2s;
+}
+
+.filter-select:hover {
+  border-color: #192d63;
+}
+
+.filter-select:focus {
+  outline: none;
+  border-color: #192d63;
+  box-shadow: 0 0 0 3px rgba(25, 45, 99, 0.1);
+}
+
+.btn-refresh {
+  padding: 0.5rem;
+  border: 1px solid #ddd;
+  border-radius: 6px;
+  background: white;
+  color: #333;
+  cursor: pointer;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: all 0.2s;
+  font-size: 1.2rem;
+}
+
+.btn-refresh:hover {
+  background: #f8f9fa;
+  border-color: #192d63;
+  color: #192d63;
+}
+
+.btn-refresh:active {
+  transform: scale(0.95);
+}
+
+/* Tarjeta principal con borde amarillo arriba */
+.concentrado-card {
+  background: white;
+  border-radius: 8px;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.1);
+  overflow: hidden;
+  border-top: 4px solid #ffc107; /* Línea amarilla arriba */
+}
+
+/* Tabla */
+.concentrado-table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: 0.95rem;
+}
+
+.concentrado-table thead {
+  background-color: #f8f9fa;
+}
+
+.concentrado-table thead tr {
+  border-bottom: 2px solid #dee2e6;
+}
+
+.concentrado-table th {
+  padding: 1rem;
+  text-align: left;
+  font-weight: 600;
+  color: #333;
+  font-size: 0.9rem;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.concentrado-table tbody tr {
+  border-bottom: 1px solid #e9ecef;
+  transition: background-color 0.2s;
+}
+
+.concentrado-table tbody tr:hover {
+  background-color: #f8f9fa;
+}
+
+.concentrado-table tbody tr:last-child {
+  border-bottom: none;
+}
+
+.concentrado-table td {
+  padding: 1rem;
+  color: #333;
+  vertical-align: middle;
+}
+
+.folio-cell {
+  font-family: 'Courier New', monospace;
+  font-weight: 500;
+  color: #192d63;
+}
+
+/* Badges de estado */
+.badge-estado {
+  display: inline-block;
+  padding: 0.4rem 0.8rem;
+  border-radius: 4px;
+  font-size: 0.85rem;
+  font-weight: 500;
+  text-align: center;
+  min-width: 100px;
+}
+
+.badge-pendiente {
+  background-color: #6c757d; /* Gris oscuro */
+  color: white;
+}
+
+.badge-en-proceso {
+  background-color: #ffc107; /* Amarillo */
+  color: #333;
+}
+
+.badge-atendida {
+  background-color: #17a2b8; /* Azul */
+  color: white;
+}
+
+.badge-cerrada {
+  background-color: var(--color-cerrada); /* #6c757d - Gris (igual que en GestionComunicaciones) */
+  color: white;
+}
+
+/* Estados de carga y sin datos */
+.loading-message,
+.no-data-message {
+  padding: 3rem;
+  text-align: center;
+  color: #666;
+}
+
+.loading-message div {
+  font-size: 1.1rem;
+}
+
+.no-data-message p {
+  font-size: 1rem;
+  margin: 0;
+}
+
+/* Responsive */
+@media (max-width: 768px) {
+  .concentrado-container {
+    padding: 1rem;
+  }
+
+  .concentrado-header h1 {
+    font-size: 1.5rem;
+  }
+
+  .header-content {
+    flex-direction: column;
+    align-items: flex-start;
+  }
+
+  .concentrado-table {
+    font-size: 0.85rem;
+  }
+
+  .concentrado-table th,
+  .concentrado-table td {
+    padding: 0.75rem 0.5rem;
+  }
+
+  .concentrado-table {
+    display: block;
+    overflow-x: auto;
+    white-space: nowrap;
+  }
+
+  .badge-estado {
+    font-size: 0.75rem;
+    padding: 0.3rem 0.6rem;
+    min-width: 80px;
+  }
+}
+

@@ -1,16 +1,19 @@
-import { useState, useEffect } from 'react';
+import { useState, useEffect, useCallback } from 'react';
 import { useNavigate } from 'react-router-dom';
 import { useUsuarioAuth } from '../../context/UsuarioAuthContext';
 import { comunicacionService } from '../../services/comunicacionService';
 import { categoriaService } from '../../services/categoriaService';
 import { seguimientoService } from '../../services/seguimientoService';
 import { estadoService } from '../../services/estadoService';
+import { usuarioService } from '../../services/usuarioService';
 import UserLayout from '../../components/user/UserLayout';
+import { MdVisibility, MdClose } from 'react-icons/md';
 import type { Comunicacion, Categoria, Estado, Seguimiento } from '../../types';
 import './Seguimiento.css';
 
 interface ComunicacionConEstado extends Comunicacion {
   estado?: Estado;
+  seguimiento?: Seguimiento;
 }
 
 const Seguimiento = () => {
@@ -20,18 +23,13 @@ const Seguimiento = () => {
   const [categorias, setCategorias] = useState<Categoria[]>([]);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [selectedComunicacion, setSelectedComunicacion] = useState<ComunicacionConEstado | null>(null);
+  const [showModal, setShowModal] = useState(false);
 
-  useEffect(() => {
-    if (!authLoading && isAuthenticated && session?.id_usuario) {
-      loadComunicaciones();
-      loadCategorias();
-    }
-  }, [isAuthenticated, session, authLoading]);
-
-  const loadComunicaciones = async () => {
-    if (!session?.id_usuario) {
-      console.warn('⚠️ No hay id_usuario en la sesión');
-      setError('No se pudo identificar tu usuario. Por favor, inicia sesión nuevamente.');
+  const loadComunicaciones = useCallback(async () => {
+    if (!session?.correo) {
+      console.warn('⚠️ No hay correo en la sesión');
+      setError('No se pudo identificar tu correo. Por favor, inicia sesión nuevamente.');
       setLoading(false);
       return;
     }
@@ -39,48 +37,83 @@ const Seguimiento = () => {
     setLoading(true);
     setError(null);
     try {
-      console.log('🔄 Buscando comunicaciones para usuario:', session.id_usuario);
-      const data = await comunicacionService.getByUsuarioId(session.id_usuario);
-      console.log('✅ Comunicaciones encontradas:', data.length);
+      // Sistema profesional: usar la tabla usuarios existente
+      // 1. Buscar usuario por correo
+      const usuario = await usuarioService.getByCorreo(session.correo);
       
-      if (data.length === 0) {
+      if (!usuario || !usuario.id_usuario) {
+        console.log('ℹ️ No se encontró usuario para este correo');
+        setComunicaciones([]);
+        setLoading(false);
+        return;
+      }
+      
+      // 2. Obtener comunicaciones del usuario usando id_usuario
+      const comunicacionesUsuario = await comunicacionService.getByUsuarioId(usuario.id_usuario);
+      
+      console.log('🔄 Comunicaciones encontradas:', comunicacionesUsuario.length);
+      
+      if (comunicacionesUsuario.length === 0) {
         console.log('ℹ️ No se encontraron comunicaciones para este usuario');
         setComunicaciones([]);
         setLoading(false);
         return;
       }
       
-      // Obtener estados para cada comunicación
+      // 3. Obtener estados y seguimientos para cada comunicación
       const estados = await estadoService.getAll();
       const comunicacionesConEstado = await Promise.all(
-        data.map(async (com) => {
+        comunicacionesUsuario.map(async (com: Comunicacion) => {
           try {
-            const seguimiento = await seguimientoService.getByComunicacionId(com.id_comunicacion!);
-            if (seguimiento) {
-              const estado = estados.find((e: Estado) => e.id_estado === seguimiento.id_estado);
-              return { ...com, estado: estado || undefined };
-            } else {
-              // Si no hay seguimiento, usar estado "Pendiente"
+            // Obtener estado del seguimiento
+            try {
+              const seguimiento = await seguimientoService.getByComunicacionId(com.id_comunicacion!);
+              if (seguimiento) {
+                const estado = estados.find((e: Estado) => e.id_estado === seguimiento.id_estado);
+                return { ...com, estado: estado || undefined, seguimiento };
+              } else {
+                // Si no hay seguimiento, usar estado "Pendiente"
+                const pendiente = estados.find((e: Estado) => e.nombre_estado === 'Pendiente');
+                return { ...com, estado: pendiente || undefined, seguimiento: undefined };
+              }
+            } catch {
+              // Si hay error, usar estado "Pendiente"
               const pendiente = estados.find((e: Estado) => e.nombre_estado === 'Pendiente');
-              return { ...com, estado: pendiente || undefined };
+              return { ...com, estado: pendiente || undefined, seguimiento: undefined };
             }
-          } catch {
-            // Si hay error, usar estado "Pendiente"
-            const pendiente = estados.find((e: Estado) => e.nombre_estado === 'Pendiente');
-            return { ...com, estado: pendiente || undefined };
+          } catch (err) {
+            console.warn(`⚠️ Error al cargar comunicación ${com.id_comunicacion}:`, err);
+            return null;
           }
         })
       );
       
-      console.log('✅ Comunicaciones procesadas con estados:', comunicacionesConEstado.length);
-      setComunicaciones(comunicacionesConEstado);
-    } catch (err: any) {
+      // Filtrar nulos y ordenar por fecha (más recientes primero)
+      const comunicacionesValidas = comunicacionesConEstado
+        .filter((com): com is ComunicacionConEstado => com !== null)
+        .sort((a, b) => {
+          const fechaA = a.fecha_recepcion ? new Date(a.fecha_recepcion).getTime() : 0;
+          const fechaB = b.fecha_recepcion ? new Date(b.fecha_recepcion).getTime() : 0;
+          return fechaB - fechaA;
+        });
+      
+      console.log('✅ Comunicaciones procesadas con estados:', comunicacionesValidas.length);
+      setComunicaciones(comunicacionesValidas);
+    } catch (err: unknown) {
       console.error('❌ Error al cargar comunicaciones:', err);
-      setError(err.message || 'Error al cargar las comunicaciones');
+      const errorMessage = err instanceof Error ? err.message : 'Error al cargar las comunicaciones';
+      setError(errorMessage);
     } finally {
       setLoading(false);
     }
-  };
+  }, [session?.correo]);
+
+  useEffect(() => {
+    if (!authLoading && isAuthenticated && session?.correo) {
+      loadComunicaciones();
+      loadCategorias();
+    }
+  }, [isAuthenticated, session, authLoading, loadComunicaciones]);
 
   const loadCategorias = async () => {
     try {
@@ -98,29 +131,25 @@ const Seguimiento = () => {
 
   const formatFecha = (fecha: string | Date | undefined) => {
     if (!fecha) return 'N/A';
-    const date = new Date(fecha);
-    return date.toLocaleDateString('es-MX');
+    try {
+      const date = new Date(fecha);
+      const day = String(date.getDate()).padStart(2, '0');
+      const month = String(date.getMonth() + 1).padStart(2, '0');
+      const year = date.getFullYear();
+      return `${day}/${month}/${year}`;
+    } catch {
+      return 'N/A';
+    }
   };
 
   const getEstadoBadge = (comunicacion: ComunicacionConEstado) => {
     const estadoNombre = comunicacion.estado?.nombre_estado || 'Pendiente';
     const estadoClass = estadoNombre.toLowerCase().replace(/\s+/g, '-');
     
-    // Mapeo de estados a abreviaciones
-    const estadoAbreviaciones: { [key: string]: string } = {
-      'Pendiente': 'P',
-      'En Proceso': 'EP',
-      'En proceso': 'EP',
-      'Atendida': 'A',
-      'Cerrada': 'C',
-      'Resuelta': 'R'
-    };
-    
-    const abreviacion = estadoAbreviaciones[estadoNombre] || estadoNombre.substring(0, 2).toUpperCase();
-    
+    // Mismo formato que en administración: mostrar el nombre completo del estado
     return (
-      <span className={`badge-estado badge-${estadoClass}`} title={estadoNombre}>
-        {abreviacion}
+      <span className={`badge-estado badge-${estadoClass}`}>
+        {estadoNombre}
       </span>
     );
   };
@@ -144,24 +173,27 @@ const Seguimiento = () => {
           
           <div className="acceso-requerido-card">
             <h2>Iniciar Sesión Requerido</h2>
-            <p>Para consultar el seguimiento de tus quejas y sugerencias, necesitas iniciar sesión en el sistema.</p>
+            <p>Para consultar el seguimiento de tus quejas y sugerencias, necesitas iniciar sesión con tu correo institucional UNACH.</p>
+            <p className="acceso-info">
+              <strong>Nota:</strong> El sistema es completamente anónimo. Solo necesitas tu correo institucional para consultar las comunicaciones que hayas enviado.
+            </p>
             <div className="acceso-buttons">
               <button 
                 className="btn-primary-acceso"
                 onClick={() => navigate('/login')}
               >
-                Iniciar Sesión
+                Iniciar Sesión con Correo UNACH
               </button>
               <button 
                 className="btn-secondary-acceso"
-                onClick={() => navigate('/register')}
+                onClick={() => navigate('/consulta-folio')}
               >
-                Registrarse
+                Consultar por Folio (Sin sesión)
               </button>
             </div>
             <div className="acceso-links">
-              <p>¿Ya tienes una cuenta? <span onClick={() => navigate('/login')}>Inicia sesión aquí</span></p>
-              <p>¿No tienes cuenta? <span onClick={() => navigate('/register')}>Regístrate aquí</span></p>
+              <p>¿Ya enviaste una comunicación? <span onClick={() => navigate('/login')}>Inicia sesión aquí</span> para ver tu seguimiento</p>
+              <p>¿Tienes un folio? <span onClick={() => navigate('/consulta-folio')}>Consulta aquí sin iniciar sesión</span></p>
             </div>
           </div>
 
@@ -191,16 +223,27 @@ const Seguimiento = () => {
   return (
     <UserLayout>
       <div className="seguimiento-container">
-        <h1>Seguimiento de Quejas y Sugerencias</h1>
-        <p className="seguimiento-subtitle">Aquí puedes consultar el estado de tus comunicaciones</p>
+        <div className="seguimiento-header">
+          <h1>Seguimiento de Quejas y Sugerencias</h1>
+          <p className="seguimiento-subtitle">Aquí puedes consultar el estado de tus comunicaciones</p>
+        </div>
         
-        {loading && <p>Cargando...</p>}
-        {error && <div className="error-message"><p>{error}</p></div>}
+        {loading && (
+          <div className="loading-message">
+            <p>Cargando tus comunicaciones...</p>
+          </div>
+        )}
+        
+        {error && (
+          <div className="error-message">
+            <p>{error}</p>
+          </div>
+        )}
         
         {!loading && !error && (
           <>
             {comunicaciones.length === 0 ? (
-              <div className="no-comunicaciones">
+              <div className="no-comunicaciones-card">
                 <p>No tienes comunicaciones registradas aún.</p>
                 <button 
                   className="btn-primary-acceso"
@@ -210,8 +253,8 @@ const Seguimiento = () => {
                 </button>
               </div>
             ) : (
-              <div className="seguimiento-tabla">
-                <table>
+              <div className="seguimiento-card">
+                <table className="seguimiento-table">
                   <thead>
                     <tr>
                       <th>Folio</th>
@@ -221,20 +264,40 @@ const Seguimiento = () => {
                       <th>Estado</th>
                       <th>Área Involucrada</th>
                       <th>Descripción</th>
+                      <th>Acciones</th>
                     </tr>
                   </thead>
                   <tbody>
-                    {comunicaciones.map((com) => (
-                      <tr key={com.id_comunicacion}>
-                        <td><strong>{com.folio}</strong></td>
-                        <td>{formatFecha(com.fecha_recepcion)}</td>
-                        <td>{com.tipo}</td>
-                        <td>{getCategoriaNombre(com.id_categoria)}</td>
-                        <td>{getEstadoBadge(com)}</td>
-                        <td>{com.area_involucrada || 'N/A'}</td>
-                        <td className="descripcion-cell">{com.descripcion.substring(0, 100)}{com.descripcion.length > 100 ? '...' : ''}</td>
-                      </tr>
-                    ))}
+                    {comunicaciones.map((com) => {
+                      return (
+                        <tr key={com.id_comunicacion}>
+                          <td className="folio-cell">{com.folio || 'N/A'}</td>
+                          <td>{formatFecha(com.fecha_recepcion)}</td>
+                          <td>{com.tipo || 'N/A'}</td>
+                          <td>{getCategoriaNombre(com.id_categoria)}</td>
+                          <td>{getEstadoBadge(com)}</td>
+                          <td>{com.area_involucrada || 'N/A'}</td>
+                          <td className="descripcion-cell">
+                            {com.descripcion ? (
+                              com.descripcion.length > 100 ? com.descripcion.substring(0, 100) + '...' : com.descripcion
+                            ) : 'N/A'}
+                          </td>
+                          <td className="acciones-cell">
+                            <button 
+                              className="btn-ver-detalles-tabla"
+                              onClick={() => {
+                                setSelectedComunicacion(com);
+                                setShowModal(true);
+                              }}
+                              title="Ver detalles completos de la comunicación"
+                            >
+                              <MdVisibility />
+                              <span>Ver detalles</span>
+                            </button>
+                          </td>
+                        </tr>
+                      );
+                    })}
                   </tbody>
                 </table>
               </div>
@@ -251,6 +314,102 @@ const Seguimiento = () => {
             <li><strong>Cerrada (C):</strong> El caso ha sido concluido y archivado.</li>
           </ul>
         </div>
+
+        <div className="notas-card">
+          <h3>Notas Adicionales:</h3>
+          <ul>
+            <li>Este documento debe ser actualizado periódicamente por la comisión encargada de la gestión de quejas y sugerencias.</li>
+            <li>Se recomienda generar informes trimestrales sobre el avance y efectividad del sistema.</li>
+            <li>La información contenida en este concentrado debe ser tratada con confidencialidad y conforme a las normativas de protección de datos de la Facultad de Medicina Humana Campus IV.</li>
+          </ul>
+        </div>
+
+        {/* Modal para ver detalles completos de la comunicación */}
+        {showModal && selectedComunicacion && (
+          <div className="modal-overlay" onClick={() => setShowModal(false)}>
+            <div className="modal-content-seguimiento" onClick={(e) => e.stopPropagation()}>
+              <div className="modal-header-seguimiento">
+                <h2>Detalles de la Comunicación</h2>
+                <button 
+                  className="modal-close-btn"
+                  onClick={() => setShowModal(false)}
+                >
+                  <MdClose />
+                </button>
+              </div>
+              <div className="modal-body-seguimiento">
+                <div className="modal-detail-row">
+                  <strong>Folio:</strong>
+                  <span>{selectedComunicacion.folio || 'N/A'}</span>
+                </div>
+                <div className="modal-detail-row">
+                  <strong>Fecha de Recepción:</strong>
+                  <span>{formatFecha(selectedComunicacion.fecha_recepcion)}</span>
+                </div>
+                <div className="modal-detail-row">
+                  <strong>Tipo:</strong>
+                  <span>{selectedComunicacion.tipo || 'N/A'}</span>
+                </div>
+                <div className="modal-detail-row">
+                  <strong>Categoría:</strong>
+                  <span>{getCategoriaNombre(selectedComunicacion.id_categoria)}</span>
+                </div>
+                <div className="modal-detail-row">
+                  <strong>Estado:</strong>
+                  <span>{getEstadoBadge(selectedComunicacion)}</span>
+                </div>
+                <div className="modal-detail-row">
+                  <strong>Área Involucrada:</strong>
+                  <span>{selectedComunicacion.area_involucrada || 'N/A'}</span>
+                </div>
+                <div className="modal-detail-row full-width">
+                  <strong>Descripción Completa:</strong>
+                  <div className="modal-descripcion-completa">
+                    {selectedComunicacion.descripcion || 'N/A'}
+                  </div>
+                </div>
+                
+                {/* Respuesta/Comentarios - siempre visible en el modal */}
+                <div className="modal-detail-row full-width">
+                  <strong>Respuesta/Comentarios:</strong>
+                  {selectedComunicacion.seguimiento?.notas && selectedComunicacion.seguimiento.notas.trim().length > 0 ? (
+                    <div className="modal-respuesta">
+                      {selectedComunicacion.seguimiento.notas}
+                      {selectedComunicacion.seguimiento.fecha_resolucion && (
+                        <div className="modal-respuesta-fecha">
+                          Resuelto el: {formatFecha(selectedComunicacion.seguimiento.fecha_resolucion)}
+                        </div>
+                      )}
+                    </div>
+                  ) : (() => {
+                    const estadoNombre = selectedComunicacion.estado?.nombre_estado || 'Pendiente';
+                    if (estadoNombre === 'Atendida' || estadoNombre === 'Cerrada') {
+                      return (
+                        <div className="modal-sin-respuesta">
+                          Sin comentarios disponibles aún.
+                        </div>
+                      );
+                    } else {
+                      return (
+                        <div className="modal-pendiente-respuesta">
+                          Pendiente de revisión por parte del administrador.
+                        </div>
+                      );
+                    }
+                  })()}
+                </div>
+              </div>
+              <div className="modal-footer-seguimiento">
+                <button 
+                  className="btn-cerrar-modal"
+                  onClick={() => setShowModal(false)}
+                >
+                  Cerrar
+                </button>
+              </div>
+            </div>
+          </div>
+        )}
       </div>
     </UserLayout>
   );
