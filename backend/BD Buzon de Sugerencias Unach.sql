@@ -76,18 +76,22 @@ CREATE TABLE evidencias (
     id_comunicacion INT REFERENCES comunicaciones(id_comunicacion) ON DELETE CASCADE,
     tipo_archivo VARCHAR(10) CHECK (tipo_archivo IN ('PDF','JPG','PNG','DOCX','XLSX','MP4')),
     nombre_archivo VARCHAR(255) NOT NULL,
-    ruta_archivo TEXT NOT NULL,
+    ruta_archivo TEXT NOT NULL, -- Ruta local o URL de Cloudinary
     tamano_bytes BIGINT,
     hash_sha256 CHAR(64),
     fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
-    cloudinary_url TEXT,
-    cloudinary_public_id VARCHAR(255)
+    cloudinary_url TEXT, -- URL de Cloudinary donde está almacenado el archivo (opcional)
+    cloudinary_public_id VARCHAR(255) -- Public ID de Cloudinary para eliminación del archivo (opcional)
 );
 
 -- Índice para búsquedas por public_id de Cloudinary
 CREATE INDEX IF NOT EXISTS idx_evidencias_cloudinary_public_id 
 ON evidencias(cloudinary_public_id) 
 WHERE cloudinary_public_id IS NOT NULL;
+
+-- Comentarios en las columnas de Cloudinary
+COMMENT ON COLUMN evidencias.cloudinary_url IS 'URL de Cloudinary donde está almacenado el archivo';
+COMMENT ON COLUMN evidencias.cloudinary_public_id IS 'Public ID de Cloudinary para eliminación del archivo';
 
 -- =========================
 -- TABLA DE COMISIÓN
