@@ -20,17 +20,21 @@
     "@types/multer": "^2.0.0",
     "@types/node": "^24.3.0",
     "@types/pg": "^8.15.5",
+    "bcryptjs": "^3.0.3",
     "cloudinary": "^2.8.0",
     "cors": "^2.8.5",
     "dotenv": "^17.2.1",
     "express": "^5.1.0",
     "helmet": "^8.1.0",
+    "jsonwebtoken": "^9.0.2",
     "morgan": "^1.10.1",
     "multer": "^2.0.2",
     "pg": "^8.16.3",
     "typescript": "^5.9.2"
   },
   "devDependencies": {
+    "@types/bcryptjs": "^2.4.6",
+    "@types/jsonwebtoken": "^9.0.10",
     "nodemon": "^3.1.10",
     "ts-node": "^10.9.2"
   }

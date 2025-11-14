@@ -8,4 +8,5 @@ export interface Seguimiento {
   fecha_resolucion: string | null;
   notas: string;
   prioridad?: 'Baja' | 'Media' | 'Alta' | 'Urgente';
+  id_admin_asignado?: number | null;
 }

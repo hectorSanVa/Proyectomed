@@ -14,6 +14,7 @@ import folioRoutes from "./routes/folioRoutes";
 import historialEstadoRoutes from "./routes/historialEstadoRoutes";
 import authRoutes from "./routes/authRoutes";
 import configuracionRoutes from "./routes/configuracionRoutes";
+import usuarioAdminRoutes from "./routes/usuarioAdminRoutes";
 import { errorHandler, notFoundHandler } from "./middlewares/errorHandler";
 import { runMigrations } from "./utils/runMigrations";
 
@@ -124,6 +125,7 @@ app.use("/comisiones", comisionRoutes);
 app.use("/folios", folioRoutes);
 app.use("/historial-estados", historialEstadoRoutes);
 app.use("/configuracion", configuracionRoutes);
+app.use("/api/admin/users", usuarioAdminRoutes);
 
 // Ruta de prueba para verificar que el servidor está funcionando
 app.get("/", (req, res) => {
@@ -177,6 +179,7 @@ async function startServer() {
       console.log(`  - POST /usuarios/login`);
       console.log(`  - GET  /configuracion/data`);
       console.log(`  - PUT  /configuracion/data`);
+      console.log(`  - GET, POST, PUT, DELETE /api/admin/users`);
     });
   } catch (error: any) {
     console.error('❌ Error crítico al iniciar el servidor:', error);

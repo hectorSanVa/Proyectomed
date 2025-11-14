@@ -21,10 +21,16 @@ export class ComunicacionDAO {
       "SELECT * FROM comunicaciones WHERE id_usuario=$1 ORDER BY fecha_recepcion DESC",
       [idUsuario]
     );
-    console.log(`✅ Encontradas ${result.rows.length} comunicaciones para usuario ID: ${idUsuario}`);
+    console.log(
+      `✅ Encontradas ${result.rows.length} comunicaciones para usuario ID: ${idUsuario}`
+    );
     if (result.rows.length > 0) {
       result.rows.forEach((com: any, idx: number) => {
-        console.log(`  ${idx + 1}. Folio: ${com.folio}, Tipo: ${com.tipo}, id_usuario: ${com.id_usuario}`);
+        console.log(
+          `  ${idx + 1}. Folio: ${com.folio}, Tipo: ${com.tipo}, id_usuario: ${
+            com.id_usuario
+          }`
+        );
       });
     }
     return result.rows;
@@ -38,13 +44,35 @@ export class ComunicacionDAO {
     return result.rows[0] || null;
   }
 
+  // ... (después de la función getByFolio)
+
+  static async getByAdminAsignado(idAdmin: number): Promise<Comunicacion[]> {
+    console.log(`🔍 Buscando comunicaciones asignadas al admin ID: ${idAdmin}`);
+    const result = await pool.query(
+      `SELECT c.* FROM comunicaciones c
+       INNER JOIN seguimiento s ON c.id_comunicacion = s.id_comunicacion
+       WHERE s.id_admin_asignado = $1
+       ORDER BY c.fecha_recepcion DESC`,
+      [idAdmin]
+    );
+    console.log(
+      `✅ Encontradas ${result.rows.length} comunicaciones asignadas a admin ID: ${idAdmin}`
+    );
+    return result.rows;
+  }
+
   static async create(
-    comunicacion: Omit<Comunicacion, "id_comunicacion" | "folio" | "fecha_recepcion"> & { medio?: 'F' | 'D' }
+    comunicacion: Omit<
+      Comunicacion,
+      "id_comunicacion" | "folio" | "fecha_recepcion"
+    > & { medio?: "F" | "D" }
   ): Promise<Comunicacion> {
-    const medio = comunicacion.medio || 'D'; // Por defecto Digital
-    
-    console.log(`📝 Creando comunicación con id_usuario: ${comunicacion.id_usuario}, medio: ${medio}`);
-    
+    const medio = comunicacion.medio || "D"; // Por defecto Digital
+
+    console.log(
+      `📝 Creando comunicación con id_usuario: ${comunicacion.id_usuario}, medio: ${medio}`
+    );
+
     // Intentar insertar con medio, si falla por que no existe la columna, insertar sin medio
     try {
       const result = await pool.query<Comunicacion>(
@@ -60,7 +88,9 @@ export class ComunicacionDAO {
           medio,
         ]
       );
-      console.log(`✅ Comunicación creada: ID=${result.rows[0].id_comunicacion}, Folio=${result.rows[0].folio}, id_usuario=${result.rows[0].id_usuario}`);
+      console.log(
+        `✅ Comunicación creada: ID=${result.rows[0].id_comunicacion}, Folio=${result.rows[0].folio}, id_usuario=${result.rows[0].id_usuario}`
+      );
       return result.rows[0];
     } catch (error: any) {
       // Si el campo medio no existe, intentar sin él
@@ -78,7 +108,9 @@ export class ComunicacionDAO {
             comunicacion.area_involucrada,
           ]
         );
-        console.log(`✅ Comunicación creada (sin medio): ID=${result.rows[0].id_comunicacion}, Folio=${result.rows[0].folio}, id_usuario=${result.rows[0].id_usuario}`);
+        console.log(
+          `✅ Comunicación creada (sin medio): ID=${result.rows[0].id_comunicacion}, Folio=${result.rows[0].folio}, id_usuario=${result.rows[0].id_usuario}`
+        );
         return result.rows[0];
       }
       throw error;
@@ -91,10 +123,14 @@ export class ComunicacionDAO {
   ): Promise<Comunicacion | null> {
     // Campos permitidos para actualizar
     const allowedFields = [
-      'tipo', 'id_usuario', 'id_categoria', 'descripcion', 
-      'area_involucrada', 'mostrar_publico'
+      "tipo",
+      "id_usuario",
+      "id_categoria",
+      "descripcion",
+      "area_involucrada",
+      "mostrar_publico",
     ];
-    
+
     // Filtrar solo campos permitidos y que tengan valor
     const filteredData: Record<string, any> = {};
     for (const [key, value] of Object.entries(data)) {
@@ -102,12 +138,12 @@ export class ComunicacionDAO {
         filteredData[key] = value;
       }
     }
-    
+
     if (Object.keys(filteredData).length === 0) {
-      console.warn('⚠️ No hay campos válidos para actualizar');
+      console.warn("⚠️ No hay campos válidos para actualizar");
       return null;
     }
-    
+
     // Verificar si la columna mostrar_publico existe antes de intentar actualizarla
     if (filteredData.mostrar_publico !== undefined) {
       try {
@@ -117,66 +153,80 @@ export class ComunicacionDAO {
            WHERE table_name = 'comunicaciones' 
            AND column_name = 'mostrar_publico'`
         );
-        
+
         if (columnCheck.rows.length === 0) {
-          console.warn('⚠️ Columna mostrar_publico no existe en la base de datos');
-          console.log('💡 Intentando agregar la columna automáticamente...');
-          
+          console.warn(
+            "⚠️ Columna mostrar_publico no existe en la base de datos"
+          );
+          console.log("💡 Intentando agregar la columna automáticamente...");
+
           // Intentar agregar la columna automáticamente
           try {
             await pool.query(
               `ALTER TABLE comunicaciones 
                ADD COLUMN IF NOT EXISTS mostrar_publico BOOLEAN DEFAULT FALSE`
             );
-            console.log('✅ Columna mostrar_publico agregada exitosamente');
+            console.log("✅ Columna mostrar_publico agregada exitosamente");
             // No eliminar de filteredData, ahora la columna existe
           } catch (alterError: any) {
-            console.error('❌ Error al agregar columna mostrar_publico:', alterError.message);
+            console.error(
+              "❌ Error al agregar columna mostrar_publico:",
+              alterError.message
+            );
             // Si falla, eliminar de filteredData y continuar sin actualizar este campo
             delete filteredData.mostrar_publico;
             // Si solo se estaba intentando actualizar mostrar_publico, retornar la comunicación actual
             if (Object.keys(filteredData).length === 0) {
-              console.warn('⚠️ Solo se intentaba actualizar mostrar_publico, pero la columna no existe y no se pudo crear. Retornando comunicación actual.');
+              console.warn(
+                "⚠️ Solo se intentaba actualizar mostrar_publico, pero la columna no existe y no se pudo crear. Retornando comunicación actual."
+              );
               return await this.getById(id);
             }
           }
         } else {
-          console.log('✅ Columna mostrar_publico existe en la base de datos');
+          console.log("✅ Columna mostrar_publico existe en la base de datos");
         }
       } catch (error: any) {
-        console.warn('⚠️ Error al verificar columna mostrar_publico:', error.message);
+        console.warn(
+          "⚠️ Error al verificar columna mostrar_publico:",
+          error.message
+        );
         // En caso de error, intentar continuar con la actualización
         // Si falla, se manejará en el catch del query principal
       }
     }
-    
+
     if (Object.keys(filteredData).length === 0) {
-      console.warn('⚠️ No hay campos válidos para actualizar después del filtrado');
+      console.warn(
+        "⚠️ No hay campos válidos para actualizar después del filtrado"
+      );
       // Retornar la comunicación actual en lugar de null
       return await this.getById(id);
     }
-    
+
     // Construir la consulta SQL de forma más segura
     const fieldNames = Object.keys(filteredData);
     const fieldValues = Object.values(filteredData);
-    
+
     if (fieldNames.length === 0) {
-      console.warn('⚠️ No hay campos para actualizar');
+      console.warn("⚠️ No hay campos para actualizar");
       return await this.getById(id);
     }
-    
+
     const setClause = fieldNames
       .map((key, i) => `"${key}"=$${i + 1}`)
       .join(", ");
-    
+
     const whereParamIndex = fieldNames.length + 1;
     const query = `UPDATE comunicaciones SET ${setClause} WHERE id_comunicacion=$${whereParamIndex} RETURNING *`;
     const params = [...fieldValues, id];
-    
-    console.log(`🔧 Actualizando comunicación ${id} con campos: ${fieldNames.join(', ')}`);
+
+    console.log(
+      `🔧 Actualizando comunicación ${id} con campos: ${fieldNames.join(", ")}`
+    );
     console.log(`📝 Query: ${query}`);
     console.log(`📊 Parámetros: ${JSON.stringify(params)}`);
-    
+
     try {
       const result = await pool.query(query, params);
 
@@ -188,9 +238,9 @@ export class ComunicacionDAO {
       console.log(`✅ Comunicación ${id} actualizada exitosamente`);
       return result.rows[0];
     } catch (error: any) {
-      console.error('❌ Error al actualizar comunicación:', error);
-      console.error('📝 Query que falló:', query);
-      console.error('📊 Parámetros:', params);
+      console.error("❌ Error al actualizar comunicación:", error);
+      console.error("📝 Query que falló:", query);
+      console.error("📊 Parámetros:", params);
       throw new Error(`Error al actualizar comunicación: ${error.message}`);
     }
   }
@@ -212,10 +262,12 @@ export class ComunicacionDAO {
          WHERE table_name = 'comunicaciones' 
          AND column_name = 'mostrar_publico'`
       );
-      
+
       if (columnCheck.rows.length === 0) {
         // Si la columna no existe, retornar todos los reconocimientos (comportamiento por defecto)
-        console.log('⚠️ Columna mostrar_publico no existe, retornando todos los reconocimientos');
+        console.log(
+          "⚠️ Columna mostrar_publico no existe, retornando todos los reconocimientos"
+        );
         const result = await pool.query(
           `SELECT * FROM comunicaciones 
            WHERE tipo = 'Reconocimiento' 
@@ -223,7 +275,7 @@ export class ComunicacionDAO {
         );
         return result.rows;
       }
-      
+
       // Si la columna existe, usar la consulta con el filtro
       const result = await pool.query(
         `SELECT * FROM comunicaciones 
@@ -233,7 +285,7 @@ export class ComunicacionDAO {
       );
       return result.rows;
     } catch (error: any) {
-      console.error('❌ Error en getReconocimientosPublicos:', error);
+      console.error("❌ Error en getReconocimientosPublicos:", error);
       // Si hay un error, intentar retornar todos los reconocimientos como fallback
       try {
         const result = await pool.query(
@@ -243,7 +295,7 @@ export class ComunicacionDAO {
         );
         return result.rows;
       } catch (fallbackError) {
-        console.error('❌ Error en fallback:', fallbackError);
+        console.error("❌ Error en fallback:", fallbackError);
         throw error; // Lanzar el error original
       }
     }
