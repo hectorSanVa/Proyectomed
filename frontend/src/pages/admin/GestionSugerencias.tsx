@@ -22,6 +22,7 @@ interface ComunicacionConEstado extends Comunicacion {
   estado?: Estado;
   seguimiento?: Seguimiento;
   responsable?: string;
+  usuario?: Usuario | null;
 }
 
 const GestionSugerencias = () => {
@@ -88,31 +89,38 @@ const GestionSugerencias = () => {
       const sugerencias = comData.filter((c: Comunicacion) => c.tipo === 'Sugerencia');
       console.log('📋 Sugerencias encontradas:', sugerencias.length);
       
-      // Cargar seguimientos para cada comunicación
+      // Cargar seguimientos y usuarios para cada comunicación
       const sugerenciasConEstado = await Promise.all(
         sugerencias.map(async (sugerencia: Comunicacion) => {
           try {
-            const seguimiento = await seguimientoService.getByComunicacionId(sugerencia.id_comunicacion!);
+            const [seguimiento, usuario] = await Promise.all([
+              seguimientoService.getByComunicacionId(sugerencia.id_comunicacion!).catch(() => null),
+              sugerencia.id_usuario ? usuarioService.getById(sugerencia.id_usuario).catch(() => null) : Promise.resolve(null)
+            ]);
+            
             if (seguimiento) {
               const estado = estadosData.find((e: Estado) => e.id_estado === seguimiento.id_estado);
               return {
                 ...sugerencia,
                 estado,
                 seguimiento,
-                responsable: seguimiento.responsable || 'Sin asignar'
+                responsable: seguimiento.responsable || 'Sin asignar',
+                usuario // Agregar usuario a la comunicación
               };
             }
             return {
               ...sugerencia,
               estado: estadosData.find((e: Estado) => e.nombre_estado === 'Pendiente'),
-              responsable: 'Sin asignar'
+              responsable: 'Sin asignar',
+              usuario // Agregar usuario a la comunicación
             };
           } catch (err) {
             console.warn(`⚠️ Error al cargar seguimiento para comunicación ${sugerencia.id_comunicacion}:`, err);
             return {
               ...sugerencia,
               estado: estadosData.find((e: Estado) => e.nombre_estado === 'Pendiente'),
-              responsable: 'Sin asignar'
+              responsable: 'Sin asignar',
+              usuario: null
             };
           }
         })
@@ -722,33 +730,7 @@ const GestionSugerencias = () => {
         yPosition += lineHeight;
       }
 
-      // FIRMA (Opcional) con fondo destacado
-      if (yPosition > doc.internal.pageSize.getHeight() - 40) {
-        doc.addPage();
-        yPosition = margin;
-      }
-      yPosition += lineHeight * 1.5;
-      doc.setFillColor(...colorAzulOscuro);
-      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colorBlanco);
-      doc.text('FIRMA (Opcional)', margin + 2, yPosition);
-      yPosition += lineHeight * 2;
-
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colorNegro);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colorGrisOscuro);
-      doc.text('Firma del remitente:', margin, yPosition);
-      yPosition += lineHeight * 2.5;
-
-      doc.setFont('helvetica', 'bold');
-      doc.text('Fecha:', margin, yPosition);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colorNegro);
-      doc.text(new Date().toLocaleDateString('es-MX'), margin + 25, yPosition);
+      // Sección de FIRMA eliminada - no se puede firmar digitalmente
 
       // Generar PDF como Blob
       const fileName = `formato_${selectedComunicacion.folio || selectedComunicacion.id_comunicacion}_${new Date().toISOString().split('T')[0]}.pdf`;
@@ -903,7 +885,7 @@ const GestionSugerencias = () => {
             <div className="search-group">
             <input
               type="text"
-                placeholder="Buscar por folio, asunto..."
+                placeholder="Buscar por folio, descripción..."
               value={searchTerm}
               onChange={(e) => setSearchTerm(e.target.value)}
                 className="search-input"
@@ -1065,7 +1047,7 @@ const GestionSugerencias = () => {
                     <th>Folio</th>
                     <th>Fecha</th>
                     <th>Remitente</th>
-                    <th>Asunto</th>
+                    <th>Descripción</th>
                     <th>Prioridad</th>
                     <th>Estado</th>
                     <th>Asignado a</th>
@@ -1081,9 +1063,20 @@ const GestionSugerencias = () => {
                           ? new Date(comunicacion.fecha_recepcion).toLocaleDateString('es-MX')
                           : '-'}
                       </td>
-                      <td>Anónimo</td>
+                      <td>
+                        {(() => {
+                          // Si no hay usuario o es confidencial, mostrar "Anónimo"
+                          if (!comunicacion.usuario || comunicacion.usuario.confidencial) {
+                            return 'Anónimo';
+                          }
+                          // Si hay usuario y no es confidencial, mostrar nombre o correo
+                          return comunicacion.usuario.nombre || comunicacion.usuario.correo || 'Anónimo';
+                        })()}
+                      </td>
                       <td className="asunto-cell">
-                        {comunicacion.descripcion.substring(0, 50)}...
+                        {comunicacion.descripcion ? (comunicacion.descripcion.length > 50 
+                          ? `${comunicacion.descripcion.substring(0, 50)}...` 
+                          : comunicacion.descripcion) : 'Sin descripción'}
                       </td>
                       <td>{getPrioridadBadge(comunicacion.seguimiento?.prioridad)}</td>
                       <td>{getEstadoSemaforo(comunicacion)}</td>

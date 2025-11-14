@@ -556,32 +556,7 @@ const ConsultaFolio = () => {
         yPosition += lineHeight;
       }
 
-      // FIRMA
-      if (yPosition > doc.internal.pageSize.getHeight() - 50) {
-        doc.addPage();
-        yPosition = margin;
-      }
-      doc.setFillColor(...colorAzulOscuro);
-      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colorBlanco);
-      doc.text('FIRMA (Opcional)', margin + 2, yPosition);
-      yPosition += lineHeight * 2;
-
-      doc.setFontSize(12);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colorNegro);
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colorGrisOscuro);
-      doc.text('Firma del remitente:', margin, yPosition);
-      yPosition += lineHeight * 2.5;
-
-      doc.setFont('helvetica', 'bold');
-      doc.text('Fecha:', margin, yPosition);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colorNegro);
-      doc.text(new Date().toLocaleDateString('es-MX'), margin + 25, yPosition);
+      // Sección de FIRMA eliminada - no se puede firmar digitalmente
 
       // Descargar PDF
       const fileName = `formato_${comunicacion.folio || comunicacion.id_comunicacion}_${new Date().toISOString().split('T')[0]}.pdf`;
