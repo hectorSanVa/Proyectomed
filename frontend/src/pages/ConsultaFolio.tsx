@@ -336,16 +336,16 @@ const ConsultaFolio = () => {
           yPosition += lineHeight;
         }
 
-        if (usuarioComunicacion.semestre_area) {
-          doc.setFont('helvetica', 'bold');
-          doc.text('Semestre/área de adscripción:', margin, yPosition);
-          doc.setFont('helvetica', 'normal');
-          const semestreAreaLines = doc.splitTextToSize(usuarioComunicacion.semestre_area, pageWidth - (margin * 2) - 50);
-          semestreAreaLines.forEach((line: string, index: number) => {
-            doc.text(line, margin + 50, yPosition + (index * lineHeight));
-          });
-          yPosition += (semestreAreaLines.length * lineHeight);
-        }
+        // Semestre/área de adscripción (siempre mostrar, usar "N/A" si está vacío)
+        doc.setFont('helvetica', 'bold');
+        doc.text('Semestre/área de adscripción:', margin, yPosition);
+        doc.setFont('helvetica', 'normal');
+        const semestreArea = usuarioComunicacion.semestre_area || 'N/A';
+        const semestreAreaLines = doc.splitTextToSize(semestreArea, pageWidth - (margin * 2) - 50);
+        semestreAreaLines.forEach((line: string, index: number) => {
+          doc.text(line, margin + 50, yPosition + (index * lineHeight));
+        });
+        yPosition += (semestreAreaLines.length * lineHeight);
 
         if (usuarioComunicacion.telefono) {
           doc.setFont('helvetica', 'bold');
