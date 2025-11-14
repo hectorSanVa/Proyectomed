@@ -795,28 +795,29 @@
   box-shadow: 0 3px 6px rgba(0, 0, 0, 0.15);
 }
 
+/* Badges de Estado - Diseño Profesional */
 .badge-pendiente {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background-color: #fff7ed;
+  color: #c2410c;
+  border: 1px solid #ffd7a8;
 }
 
 .badge-en-proceso {
-  background: linear-gradient(135deg, #3498db 0%, #2980b9 100%);
-  color: var(--unach-blanco);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background-color: #eff6ff;
+  color: #1e40af;
+  border: 1px solid #93c5fd;
 }
 
 .badge-atendida {
-  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-  color: var(--unach-blanco);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background-color: #f0fdf4;
+  color: #166534;
+  border: 1px solid #86efac;
 }
 
 .badge-cerrada {
-  background: linear-gradient(135deg, #95a5a6 0%, #7f8c8d 100%);
-  color: var(--unach-blanco);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+  background-color: #f9fafb;
+  color: #4b5563;
+  border: 1px solid #d1d5db;
 }
 
 /* Badges de Prioridad - Diseño Profesional y Sutil */
@@ -1843,10 +1844,18 @@
   display: flex;
   align-items: center;
   justify-content: space-between;
-  padding: 0.75rem;
-  background: #f8f9fa;
-  border-radius: 6px;
-  border: 1px solid #ddd;
+  padding: 1.25rem;
+  background: #ffffff;
+  border-radius: 8px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.evidencia-item:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border-color: var(--unach-dorado);
+  transform: translateX(2px);
 }
 
 .evidencia-info {
@@ -1867,21 +1876,23 @@
 }
 
 .btn-download-evidencia {
-  padding: 0.5rem 1rem;
+  padding: 0.6rem 1.1rem;
   background: var(--unach-azul-oscuro);
   color: white;
   text-decoration: none;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  border-radius: 6px;
+  font-size: 0.875rem;
   font-weight: 600;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(25, 45, 99, 0.2);
+  letter-spacing: 0.2px;
 }
 
 .btn-download-evidencia:hover {
   background: var(--unach-dorado);
   color: var(--unach-azul-oscuro);
   transform: translateY(-2px);
-  box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
+  box-shadow: 0 4px 8px rgba(212, 176, 18, 0.3);
 }
 
 /* Botón de descargar PDF profesional */
