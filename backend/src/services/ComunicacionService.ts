@@ -1,6 +1,7 @@
 import { Comunicacion } from "../models/Comunicacion";
 import { ComunicacionDAO } from "../dao/ComunicacionDAO";
 import { UsuarioService } from "./UsuarioService";
+import { Usuario } from "../models/Usuario";
 import { SeguimientoService } from "./SeguimientoService";
 import { EstadoService } from "./EstadoService";
 import { calcularPrioridadAutomatica } from "../utils/prioridadUtils";
@@ -129,23 +130,31 @@ export class ComunicacionService {
               }
             }
             
-            usuario = await UsuarioService.update(usuario.id_usuario!, datosActualizacion);
-            console.log(`✅ Usuario actualizado exitosamente: ID=${usuario.id_usuario}`);
-            console.log(`📊 Usuario DESPUÉS de actualizar: confidencial=${usuario.confidencial}, autorizo_contacto=${usuario.autorizo_contacto}, nombre=${usuario.nombre}`);
-            
-            // Verificar que la actualización fue exitosa
-            if (usuario.confidencial === true && !com.anonimo) {
-              console.error('❌ ERROR: Usuario sigue teniendo confidencial=true después de actualizar. Esto no debería pasar.');
-              console.error('❌ Intentando actualización forzada...');
-              try {
-                usuario = await UsuarioService.update(usuario.id_usuario!, {
-                  confidencial: false,
-                  autorizo_contacto: true
-                });
-                console.log('✅ Actualización forzada exitosa');
-              } catch (forceError: any) {
-                console.error('❌ Error en actualización forzada:', forceError.message);
+            const usuarioActualizado = await UsuarioService.update(usuario.id_usuario!, datosActualizacion);
+            if (usuarioActualizado) {
+              usuario = usuarioActualizado;
+              console.log(`✅ Usuario actualizado exitosamente: ID=${usuario.id_usuario}`);
+              console.log(`📊 Usuario DESPUÉS de actualizar: confidencial=${usuario.confidencial}, autorizo_contacto=${usuario.autorizo_contacto}, nombre=${usuario.nombre}`);
+              
+              // Verificar que la actualización fue exitosa
+              if (usuario.confidencial === true && !com.anonimo) {
+                console.error('❌ ERROR: Usuario sigue teniendo confidencial=true después de actualizar. Esto no debería pasar.');
+                console.error('❌ Intentando actualización forzada...');
+                try {
+                  const usuarioForzado = await UsuarioService.update(usuario.id_usuario!, {
+                    confidencial: false,
+                    autorizo_contacto: true
+                  });
+                  if (usuarioForzado) {
+                    usuario = usuarioForzado;
+                    console.log('✅ Actualización forzada exitosa');
+                  }
+                } catch (forceError: any) {
+                  console.error('❌ Error en actualización forzada:', forceError.message);
+                }
               }
+            } else {
+              console.warn('⚠️ UsuarioService.update retornó null, el usuario no se actualizó');
             }
           } catch (updateError: any) {
             console.error(`❌ Error al actualizar datos del usuario:`, updateError.message);
@@ -160,11 +169,14 @@ export class ComunicacionService {
           if (usuario.confidencial) {
             console.log(`⚠️ Usuario existente tiene confidencial=true pero la comunicación NO es anónima. Actualizando...`);
             try {
-              usuario = await UsuarioService.update(usuario.id_usuario!, {
+              const usuarioActualizado = await UsuarioService.update(usuario.id_usuario!, {
                 confidencial: false,
                 autorizo_contacto: true
               });
-              console.log(`✅ Usuario actualizado: confidencial=false, autorizo_contacto=true`);
+              if (usuarioActualizado) {
+                usuario = usuarioActualizado;
+                console.log(`✅ Usuario actualizado: confidencial=false, autorizo_contacto=true`);
+              }
             } catch (updateError: any) {
               console.warn(`⚠️ No se pudo actualizar confidencial del usuario existente:`, updateError.message);
             }
