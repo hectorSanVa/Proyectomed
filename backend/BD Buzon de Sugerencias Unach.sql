@@ -79,8 +79,15 @@ CREATE TABLE evidencias (
     ruta_archivo TEXT NOT NULL,
     tamano_bytes BIGINT,
     hash_sha256 CHAR(64),
-    fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+    fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+    cloudinary_url TEXT,
+    cloudinary_public_id VARCHAR(255)
 );
+
+-- Índice para búsquedas por public_id de Cloudinary
+CREATE INDEX IF NOT EXISTS idx_evidencias_cloudinary_public_id 
+ON evidencias(cloudinary_public_id) 
+WHERE cloudinary_public_id IS NOT NULL;
 
 -- =========================
 -- TABLA DE COMISIÓN

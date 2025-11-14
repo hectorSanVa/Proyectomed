@@ -103,10 +103,12 @@ export interface Evidencia {
   id_comunicacion: number;
   tipo_archivo: 'PDF' | 'JPG' | 'PNG' | 'DOCX' | 'XLSX' | 'MP4';
   nombre_archivo: string;
-  ruta_archivo: string;
+  ruta_archivo: string; // Ruta local o URL de Cloudinary
   tamano_bytes?: number;
   hash_sha256?: string;
   fecha_subida?: string;
+  cloudinary_url?: string; // URL de Cloudinary (opcional)
+  cloudinary_public_id?: string; // Public ID de Cloudinary (opcional)
 }
 
 // Tipos de comisión

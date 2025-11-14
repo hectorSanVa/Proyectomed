@@ -16,21 +16,49 @@ export class EvidenciaDAO {
   }
 
   static async create(evidencia: Omit<Evidencia, "id_evidencia" | "fecha_subida">): Promise<Evidencia> {
-    const result = await pool.query<Evidencia>(
-      `INSERT INTO evidencias 
-        (id_comunicacion, tipo_archivo, nombre_archivo, ruta_archivo, tamano_bytes, hash_sha256)
-       VALUES ($1,$2,$3,$4,$5,$6)
-       RETURNING *`,
-      [
-        evidencia.id_comunicacion,
-        evidencia.tipo_archivo,
-        evidencia.nombre_archivo,
-        evidencia.ruta_archivo,
-        evidencia.tamano_bytes,
-        evidencia.hash_sha256,
-      ]
-    );
-    return result.rows[0];
+    try {
+      // Intentar insertar con campos de Cloudinary (si están disponibles)
+      // Si las columnas no existen, la query fallará y se intentará sin ellas
+      const result = await pool.query<Evidencia>(
+        `INSERT INTO evidencias 
+          (id_comunicacion, tipo_archivo, nombre_archivo, ruta_archivo, tamano_bytes, hash_sha256, cloudinary_url, cloudinary_public_id)
+         VALUES ($1,$2,$3,$4,$5,$6,$7,$8)
+         RETURNING *`,
+        [
+          evidencia.id_comunicacion,
+          evidencia.tipo_archivo,
+          evidencia.nombre_archivo,
+          evidencia.ruta_archivo,
+          evidencia.tamano_bytes || null,
+          evidencia.hash_sha256 || null,
+          evidencia.cloudinary_url || null,
+          evidencia.cloudinary_public_id || null,
+        ]
+      );
+      return result.rows[0];
+    } catch (error: any) {
+      // Si falla porque las columnas de Cloudinary no existen, intentar sin ellas
+      if (error.message && error.message.includes('cloudinary')) {
+        console.warn('⚠️ Columnas de Cloudinary no existen, insertando sin ellas');
+        const result = await pool.query<Evidencia>(
+          `INSERT INTO evidencias 
+            (id_comunicacion, tipo_archivo, nombre_archivo, ruta_archivo, tamano_bytes, hash_sha256)
+           VALUES ($1,$2,$3,$4,$5,$6)
+           RETURNING *`,
+          [
+            evidencia.id_comunicacion,
+            evidencia.tipo_archivo,
+            evidencia.nombre_archivo,
+            evidencia.ruta_archivo,
+            evidencia.tamano_bytes || null,
+            evidencia.hash_sha256 || null,
+          ]
+        );
+        return result.rows[0];
+      }
+      // Si es otro error, lanzarlo
+      throw error;
+    }
   }
 
   static async update(id: number, evidencia: Partial<Evidencia>): Promise<Evidencia | null> {

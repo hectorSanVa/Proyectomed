@@ -138,8 +138,28 @@ export async function runMigrations() {
         ruta_archivo TEXT NOT NULL,
         tamano_bytes BIGINT,
         hash_sha256 CHAR(64),
-        fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP
+        fecha_subida TIMESTAMP DEFAULT CURRENT_TIMESTAMP,
+        cloudinary_url TEXT,
+        cloudinary_public_id VARCHAR(255)
       );
+    `);
+
+    // Agregar columnas de Cloudinary si no existen (para bases de datos existentes)
+    await pool.query(`
+      ALTER TABLE evidencias 
+      ADD COLUMN IF NOT EXISTS cloudinary_url TEXT;
+    `);
+
+    await pool.query(`
+      ALTER TABLE evidencias 
+      ADD COLUMN IF NOT EXISTS cloudinary_public_id VARCHAR(255);
+    `);
+
+    // Crear índice para búsquedas por public_id
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_evidencias_cloudinary_public_id 
+      ON evidencias(cloudinary_public_id) 
+      WHERE cloudinary_public_id IS NOT NULL;
     `);
 
     await pool.query(`
