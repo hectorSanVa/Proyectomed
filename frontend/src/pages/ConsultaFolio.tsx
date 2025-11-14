@@ -337,15 +337,17 @@ const ConsultaFolio = () => {
         }
 
         // Semestre/área de adscripción (siempre mostrar, usar "N/A" si está vacío)
+        // Etiqueta en línea separada porque es muy larga
         doc.setFont('helvetica', 'bold');
         doc.text('Semestre/área de adscripción:', margin, yPosition);
+        yPosition += lineHeight;
         doc.setFont('helvetica', 'normal');
         const semestreArea = usuarioComunicacion.semestre_area || 'N/A';
-        const semestreAreaLines = doc.splitTextToSize(semestreArea, pageWidth - (margin * 2) - 50);
-        semestreAreaLines.forEach((line: string, index: number) => {
-          doc.text(line, margin + 50, yPosition + (index * lineHeight));
+        const semestreAreaLines = doc.splitTextToSize(semestreArea, pageWidth - (margin * 2));
+        semestreAreaLines.forEach((line: string) => {
+          doc.text(line, margin, yPosition);
+          yPosition += lineHeight;
         });
-        yPosition += (semestreAreaLines.length * lineHeight);
 
         if (usuarioComunicacion.telefono) {
           doc.setFont('helvetica', 'bold');
