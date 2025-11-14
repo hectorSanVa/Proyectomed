@@ -1,6 +1,6 @@
 import api from './api';
 // Importamos los tipos que definimos en types/index.ts
-import type { User, AdminRol } from '../types';
+import type { User } from '../types';
 
 // --- Definimos los tipos para los payloads (datos que se envían) ---
 
