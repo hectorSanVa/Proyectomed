@@ -52,23 +52,25 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    // En desarrollo, permitir cualquier origen
+    // En desarrollo local, permitir cualquier origen
     if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
       return callback(null, true);
     }
     
-    // Verificar si el origin está en la lista de permitidos
+    // En producción, verificar si el origin está en la lista de permitidos
+    // IMPORTANTE: También permitir localhost para desarrollo local contra backend de producción
+    const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
     const isAllowed = allowedOrigins.some(allowed => {
       return origin === allowed || origin.startsWith(allowed);
     });
     
-    if (isAllowed) {
+    if (isAllowed || isLocalhost) {
       callback(null, true);
     } else {
       console.warn(`⚠️ CORS: Origen no permitido: ${origin}`);
       console.warn(`⚠️ Orígenes permitidos:`, allowedOrigins);
-      // En desarrollo, permitir de todos modos
-      if (process.env.NODE_ENV !== 'production') {
+      // Permitir localhost incluso en producción para desarrollo local
+      if (isLocalhost) {
         callback(null, true);
       } else {
         callback(new Error('No permitido por CORS'));
@@ -76,6 +78,9 @@ const corsOptions = {
     }
   },
   credentials: true,
+  methods: ['GET', 'POST', 'PUT', 'DELETE', 'OPTIONS', 'PATCH'],
+  allowedHeaders: ['Content-Type', 'Authorization', 'X-Requested-With'],
+  exposedHeaders: ['Content-Type', 'Authorization'],
   optionsSuccessStatus: 200
 };
 
