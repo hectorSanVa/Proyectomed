@@ -4,6 +4,7 @@ import { API_BASE_URL } from '../config/api';
 // Instancia de axios configurada
 const api = axios.create({
   baseURL: API_BASE_URL,
+  timeout: 30000, // 30 segundos de timeout
 });
 
 // Interceptor para agregar headers (excepto para FormData)

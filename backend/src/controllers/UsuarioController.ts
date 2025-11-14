@@ -71,23 +71,37 @@ export class UsuarioController {
   // Login de usuario: crear o obtener usuario por correo
   static async login(req: Request, res: Response) {
     try {
+      console.log('🔐 POST /usuarios/login recibido');
+      console.log('📝 Body:', req.body);
+      
       const { correo } = req.body;
 
       if (!correo || !correo.includes('@')) {
+        console.warn('⚠️ Correo inválido:', correo);
         return res.status(400).json({ error: "Correo electrónico inválido" });
       }
 
       // Validar que sea correo institucional de UNACH
       const correoLower = correo.toLowerCase();
       if (!correoLower.includes('@unach.mx') && !correoLower.includes('@unach.edu.mx')) {
+        console.warn('⚠️ Correo no es institucional:', correoLower);
         return res.status(400).json({ error: "Por favor ingresa tu correo institucional de la UNACH (@unach.mx o @unach.edu.mx)" });
       }
+
+      console.log('✅ Correo validado:', correoLower);
+      console.log('📡 Llamando a UsuarioService.createOrGetByCorreo...');
 
       // Crear o obtener usuario por correo (se guarda en la base de datos)
       const usuario = await UsuarioService.createOrGetByCorreo(correoLower);
 
+      console.log('✅ Usuario obtenido/creado:', {
+        id_usuario: usuario.id_usuario,
+        correo: usuario.correo,
+        nombre: usuario.nombre,
+      });
+
       // Retornar sesión con información del usuario
-      res.json({
+      const response = {
         success: true,
         session: {
           id_usuario: usuario.id_usuario,
@@ -95,9 +109,13 @@ export class UsuarioController {
           nombre: usuario.nombre || correoLower.split('@')[0],
         },
         message: "Sesión iniciada correctamente",
-      });
+      };
+      
+      console.log('✅ Enviando respuesta:', response);
+      res.json(response);
     } catch (error: any) {
-      console.error('Error en login de usuario:', error);
+      console.error('❌ Error en login de usuario:', error);
+      console.error('❌ Stack:', error.stack);
       res.status(500).json({ error: error.message || "Error al iniciar sesión" });
     }
   }

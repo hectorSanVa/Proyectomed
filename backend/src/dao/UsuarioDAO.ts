@@ -35,33 +35,46 @@ export class UsuarioDAO {
    * Los campos tienen valores por defecto según las restricciones de la tabla
    */
   static async createOrGetByCorreo(correo: string): Promise<Usuario> {
-    // Buscar usuario existente
-    const existente = await this.getByCorreo(correo);
-    if (existente) {
-      console.log(`✅ Usuario existente encontrado: ${correo} (ID: ${existente.id_usuario})`);
-      return existente;
-    }
+    try {
+      console.log(`🔍 Buscando usuario existente: ${correo}`);
+      
+      // Buscar usuario existente
+      const existente = await this.getByCorreo(correo);
+      if (existente) {
+        console.log(`✅ Usuario existente encontrado: ${correo} (ID: ${existente.id_usuario})`);
+        return existente;
+      }
 
-    // Crear usuario mínimo para seguimiento
-    // Usamos valores por defecto que cumplan con los CHECK constraints
-    const nombreMinimo = correo.split('@')[0] || 'Usuario';
-    console.log(`📝 Creando nuevo usuario para seguimiento: ${correo}`);
-    const result = await pool.query(
-      `INSERT INTO usuarios (correo, nombre, telefono, semestre_area, tipo_usuario, sexo, confidencial, autorizo_contacto) 
-       VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
-      [
-        correo,
-        nombreMinimo, // Nombre mínimo derivado del correo
-        '', // Telefono vacío (VARCHAR permite vacío)
-        '', // Semestre/area vacío (VARCHAR permite vacío)
-        'Estudiante', // Tipo usuario por defecto (requerido por CHECK)
-        'Prefiero no responder', // Sexo por defecto (requerido por CHECK)
-        true, // Confidencial por defecto
-        false // No autoriza contacto por defecto
-      ]
-    );
-    console.log(`✅ Usuario creado: ${correo} (ID: ${result.rows[0].id_usuario})`);
-    return result.rows[0];
+      // Crear usuario mínimo para seguimiento
+      // Usamos valores por defecto que cumplan con los CHECK constraints
+      const nombreMinimo = correo.split('@')[0] || 'Usuario';
+      console.log(`📝 Creando nuevo usuario para seguimiento: ${correo}`);
+      console.log(`📝 Datos del nuevo usuario: nombre=${nombreMinimo}, tipo=Estudiante, sexo=Prefiero no responder`);
+      
+      const result = await pool.query(
+        `INSERT INTO usuarios (correo, nombre, telefono, semestre_area, tipo_usuario, sexo, confidencial, autorizo_contacto) 
+         VALUES ($1, $2, $3, $4, $5, $6, $7, $8) RETURNING *`,
+        [
+          correo,
+          nombreMinimo, // Nombre mínimo derivado del correo
+          '', // Telefono vacío (VARCHAR permite vacío)
+          '', // Semestre/area vacío (VARCHAR permite vacío)
+          'Estudiante', // Tipo usuario por defecto (requerido por CHECK)
+          'Prefiero no responder', // Sexo por defecto (requerido por CHECK)
+          true, // Confidencial por defecto
+          false // No autoriza contacto por defecto
+        ]
+      );
+      
+      console.log(`✅ Usuario creado exitosamente: ${correo} (ID: ${result.rows[0].id_usuario})`);
+      return result.rows[0];
+    } catch (error: any) {
+      console.error(`❌ Error en createOrGetByCorreo para ${correo}:`, error.message);
+      console.error(`❌ Stack:`, error.stack);
+      console.error(`❌ Code:`, error.code);
+      console.error(`❌ Detail:`, error.detail);
+      throw new Error(`Error al crear u obtener usuario: ${error.message}`);
+    }
   }
 
   static async create(usuario: Usuario): Promise<Usuario> {

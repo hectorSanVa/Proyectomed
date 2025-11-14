@@ -19,9 +19,17 @@ export const usuarioAuthService = {
 
       // Llamar al backend para crear o obtener usuario
       console.log('📡 Enviando solicitud al servidor...');
+      console.log('📡 URL:', `${API_BASE_URL}/usuarios/login`);
+      console.log('📡 Correo:', correo);
       
       try {
-        const response = await api.post('/usuarios/login', { correo });
+        // Agregar timeout específico para login (30 segundos)
+        const response = await api.post('/usuarios/login', { correo }, {
+          timeout: 30000,
+        });
+        
+        console.log('✅ Respuesta del servidor recibida:', response.status);
+        console.log('✅ Datos recibidos:', response.data);
         
         if (response.data.success) {
           const session = response.data.session;
@@ -39,8 +47,22 @@ export const usuarioAuthService = {
           throw new Error(response.data.error || 'Error al iniciar sesión');
         }
       } catch (apiError: any) {
+        console.error('❌ Error en petición al servidor:', {
+          message: apiError.message,
+          code: apiError.code,
+          status: apiError.response?.status,
+          statusText: apiError.response?.statusText,
+          data: apiError.response?.data,
+          timeout: apiError.code === 'ECONNABORTED',
+        });
+        
+        // Si es timeout
+        if (apiError.code === 'ECONNABORTED' || apiError.message?.includes('timeout')) {
+          console.error('⏱️ Timeout: El servidor no respondió en 30 segundos');
+          throw new Error('El servidor está tardando mucho en responder. Por favor, intenta nuevamente en unos momentos.');
+        }
+        
         // Si el endpoint no existe (404), significa que Render aún no desplegó los cambios
-        // En este caso, usar el método temporal (solo para desarrollo)
         if (apiError.response?.status === 404) {
           console.warn('⚠️ Endpoint /usuarios/login no disponible aún. Render puede estar desplegando...');
           console.warn('⚠️ Usando método temporal (solo correo local)');
@@ -66,6 +88,12 @@ export const usuarioAuthService = {
             session,
             message: 'Sesión iniciada correctamente (modo temporal - el servidor está actualizándose)',
           };
+        }
+        
+        // Si es error 500, puede ser que el servidor esté caído
+        if (apiError.response?.status === 500) {
+          console.error('❌ Error 500: El servidor tiene un error interno');
+          throw new Error('Error en el servidor. Por favor, intenta nuevamente en unos momentos.');
         }
         
         // Para otros errores, lanzar el error original
