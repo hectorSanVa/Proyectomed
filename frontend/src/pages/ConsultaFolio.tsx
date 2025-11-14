@@ -4,7 +4,14 @@ import UserLayout from '../components/user/UserLayout';
 import { comunicacionService } from '../services/comunicacionService';
 import { seguimientoService } from '../services/seguimientoService';
 import { estadoService } from '../services/estadoService';
-import type { Comunicacion, Estado, Seguimiento } from '../types';
+import { usuarioService } from '../services/usuarioService';
+import { categoriaService } from '../services/categoriaService';
+import { evidenciaService } from '../services/evidenciaService';
+import type { Comunicacion, Estado, Seguimiento, Usuario, Categoria } from '../types';
+import jsPDF from 'jspdf';
+import logoIzquierdo from '../assets/img/logosuperiorizquiero.png';
+import logoDerecho from '../assets/img/logosuperiorderecho.png';
+import { MdPictureAsPdf } from 'react-icons/md';
 import './ConsultaFolio.css';
 
 const ConsultaFolio = () => {
@@ -41,9 +48,15 @@ const ConsultaFolio = () => {
       if (resultado) {
         setComunicacion(resultado);
         
+        // Cargar datos adicionales en paralelo
+        const [seguimientoData, categoriasData, evidenciasData] = await Promise.all([
+          seguimientoService.getByComunicacionId(resultado.id_comunicacion!).catch(() => null),
+          categoriaService.getAll().catch(() => []),
+          evidenciaService.getByComunicacionId(resultado.id_comunicacion!).catch(() => [])
+        ]);
+
         // Obtener estado real del seguimiento
         try {
-          const seguimientoData = await seguimientoService.getByComunicacionId(resultado.id_comunicacion!);
           if (seguimientoData) {
             setSeguimiento(seguimientoData);
             const estados = await estadoService.getAll();
@@ -62,6 +75,35 @@ const ConsultaFolio = () => {
           const estados = await estadoService.getAll();
           const pendiente = estados.find((e: Estado) => e.nombre_estado === 'Pendiente');
           setEstado(pendiente || null);
+        }
+
+        // Cargar categoría
+        if (categoriasData && resultado.id_categoria) {
+          const categoria = categoriasData.find((c: Categoria) => c.id_categoria === resultado.id_categoria);
+          setCategoriaComunicacion(categoria || null);
+        }
+
+        // Filtrar evidencias: solo mostrar las subidas por el usuario, NO los PDFs generados
+        const evidenciasUsuario = evidenciasData.filter((ev: any) => {
+          const nombreArchivo = ev.nombre_archivo?.toLowerCase() || '';
+          const esPDFGenerado = nombreArchivo.startsWith('formato_') || 
+                                /^\d+_\d{4}-\d{2}-\d{2}\.pdf$/.test(nombreArchivo) ||
+                                /^formato_.*\.pdf$/.test(nombreArchivo);
+          return !esPDFGenerado;
+        });
+        setEvidencias(evidenciasUsuario);
+
+        // Cargar datos del usuario si existe
+        if (resultado.id_usuario) {
+          try {
+            const usuario = await usuarioService.getById(resultado.id_usuario);
+            setUsuarioComunicacion(usuario);
+          } catch (error) {
+            console.error('Error al cargar usuario:', error);
+            setUsuarioComunicacion(null);
+          }
+        } else {
+          setUsuarioComunicacion(null);
         }
       } else {
         setError('No se encontró ninguna comunicación con ese folio');
@@ -89,6 +131,468 @@ const ConsultaFolio = () => {
       return `${day}/${month}/${year}`;
     } catch {
       return 'N/A';
+    }
+  };
+
+  // Función auxiliar para cargar imagen como base64
+  const loadImageAsBase64 = (imagePath: string): Promise<string> => {
+    return new Promise((resolve, reject) => {
+      const img = new Image();
+      img.crossOrigin = 'anonymous';
+      img.onload = () => {
+        const canvas = document.createElement('canvas');
+        canvas.width = img.width;
+        canvas.height = img.height;
+        const ctx = canvas.getContext('2d');
+        if (ctx) {
+          ctx.drawImage(img, 0, 0);
+          try {
+            const base64 = canvas.toDataURL('image/png');
+            resolve(base64);
+          } catch (error) {
+            reject(error);
+          }
+        } else {
+          reject(new Error('No se pudo obtener el contexto del canvas'));
+        }
+      };
+      img.onerror = reject;
+      img.src = imagePath;
+    });
+  };
+
+  // Función para descargar PDF de la comunicación
+  const descargarPDF = async () => {
+    if (!comunicacion) return;
+
+    try {
+      setGenerandoPDF(true);
+      const doc = new jsPDF('p', 'mm', 'a4');
+      const pageWidth = doc.internal.pageSize.getWidth();
+      const margin = 15;
+      let yPosition = margin;
+      const lineHeight = 8;
+
+      // Colores profesionales
+      const colorAzulOscuro: [number, number, number] = [25, 45, 99];
+      const colorAzulClaro: [number, number, number] = [41, 128, 185];
+      const colorGrisOscuro: [number, number, number] = [44, 62, 80];
+      const colorGrisClaro: [number, number, number] = [108, 117, 125];
+      const colorNegro: [number, number, number] = [33, 37, 41];
+      const colorBlanco: [number, number, number] = [255, 255, 255];
+
+      // Cargar logos
+      let logoIzquierdoBase64: string | null = null;
+      let logoDerechoBase64: string | null = null;
+      
+      try {
+        logoIzquierdoBase64 = await loadImageAsBase64(logoIzquierdo);
+        logoDerechoBase64 = await loadImageAsBase64(logoDerecho);
+      } catch (error) {
+        console.warn('Error al cargar logos para PDF:', error);
+      }
+
+      // Header con logos (similar a FormularioPublico)
+      const headerY = 10;
+      const maxLogoHeight = 20;
+      const maxLogoWidth = 45;
+
+      if (logoIzquierdoBase64) {
+        try {
+          const img = new Image();
+          img.src = logoIzquierdoBase64;
+          await new Promise((resolve) => {
+            img.onload = () => {
+              const aspectRatio = img.width / img.height;
+              let logoWidth = maxLogoWidth;
+              let logoHeight = maxLogoWidth / aspectRatio;
+              if (logoHeight > maxLogoHeight) {
+                logoHeight = maxLogoHeight;
+                logoWidth = maxLogoHeight * aspectRatio;
+              }
+              doc.addImage(logoIzquierdoBase64, 'PNG', margin, headerY, logoWidth, logoHeight);
+              resolve(null);
+            };
+            img.onerror = resolve;
+          });
+        } catch (error) {
+          console.warn('Error al agregar logo izquierdo:', error);
+        }
+      }
+
+      if (logoDerechoBase64) {
+        try {
+          const img = new Image();
+          img.src = logoDerechoBase64;
+          await new Promise((resolve) => {
+            img.onload = () => {
+              const aspectRatio = img.width / img.height;
+              let logoWidth = maxLogoWidth;
+              let logoHeight = maxLogoWidth / aspectRatio;
+              if (logoHeight > maxLogoHeight) {
+                logoHeight = maxLogoHeight;
+                logoWidth = maxLogoHeight * aspectRatio;
+              }
+              doc.addImage(logoDerechoBase64, 'PNG', pageWidth - margin - logoWidth, headerY, logoWidth, logoHeight);
+              resolve(null);
+            };
+            img.onerror = resolve;
+          });
+        } catch (error) {
+          console.warn('Error al agregar logo derecho:', error);
+        }
+      }
+
+      const logoHeight = maxLogoHeight;
+      yPosition = headerY + logoHeight + 8;
+
+      // Título principal
+      doc.setFontSize(16);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorAzulOscuro);
+      doc.text('FORMATO DE QUEJAS, SUGERENCIAS Y RECONOCIMIENTOS', pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += lineHeight * 1.2;
+
+      const subtitulo = comunicacion.tipo === 'Reconocimiento' 
+        ? 'FORMATO DE RECONOCIMIENTOS'
+        : 'FORMATO DE QUEJAS Y SUGERENCIAS';
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorAzulClaro);
+      doc.text(subtitulo, pageWidth / 2, yPosition, { align: 'center' });
+      yPosition += lineHeight * 1.5;
+
+      // Línea separadora
+      doc.setDrawColor(...colorAzulOscuro);
+      doc.setLineWidth(0.5);
+      doc.line(margin, yPosition, pageWidth - margin, yPosition);
+      yPosition += lineHeight * 1.5;
+
+      // Folio
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
+      doc.text('Folio:', margin, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+      doc.text(comunicacion.folio || 'N/A', margin + 25, yPosition);
+      yPosition += lineHeight * 1.5;
+
+      // DATOS DEL REMITENTE
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorBlanco);
+      doc.text('DATOS DEL REMITENTE', margin + 2, yPosition);
+      yPosition += lineHeight * 1.8;
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+
+      // Verificar si es confidencial/anónimo
+      const esConfidencial = usuarioComunicacion?.confidencial === true;
+      const esAnonimo = !comunicacion.id_usuario;
+
+      if (esAnonimo || esConfidencial) {
+        doc.setFont('helvetica', 'bold');
+        doc.text('Tipo:', margin, yPosition);
+        doc.setFont('helvetica', 'normal');
+        if (esConfidencial) {
+          doc.text('Comunicación Confidencial', margin + 20, yPosition);
+        } else {
+          doc.text('Comunicación Anónima', margin + 20, yPosition);
+        }
+        yPosition += lineHeight;
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(...colorGrisClaro);
+        if (esConfidencial) {
+          doc.text('Los datos personales del remitente han sido ocultados por solicitud de confidencialidad.', margin, yPosition, { maxWidth: pageWidth - (margin * 2) });
+        } else {
+          doc.text('Esta comunicación fue enviada de forma anónima. No se guardaron datos personales del remitente.', margin, yPosition, { maxWidth: pageWidth - (margin * 2) });
+        }
+        doc.setTextColor(...colorNegro);
+        yPosition += lineHeight * 1.5;
+      } else if (usuarioComunicacion) {
+        // Mostrar datos del usuario si no es confidencial
+        if (usuarioComunicacion.nombre) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Nombre (Opcional):', margin, yPosition);
+          doc.setFont('helvetica', 'normal');
+          doc.text(usuarioComunicacion.nombre, margin + 50, yPosition);
+          yPosition += lineHeight;
+        }
+
+        if (usuarioComunicacion.correo) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Correo electrónico:', margin, yPosition);
+          doc.setFont('helvetica', 'normal');
+          doc.text(usuarioComunicacion.correo, margin + 50, yPosition);
+          yPosition += lineHeight;
+        }
+
+        if (usuarioComunicacion.semestre_area) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Semestre/área de adscripción:', margin, yPosition);
+          doc.setFont('helvetica', 'normal');
+          const semestreAreaLines = doc.splitTextToSize(usuarioComunicacion.semestre_area, pageWidth - (margin * 2) - 50);
+          semestreAreaLines.forEach((line: string, index: number) => {
+            doc.text(line, margin + 50, yPosition + (index * lineHeight));
+          });
+          yPosition += (semestreAreaLines.length * lineHeight);
+        }
+
+        if (usuarioComunicacion.telefono) {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Teléfono (opcional):', margin, yPosition);
+          doc.setFont('helvetica', 'normal');
+          doc.text(usuarioComunicacion.telefono, margin + 50, yPosition);
+          yPosition += lineHeight;
+        }
+
+        if (usuarioComunicacion.tipo_usuario && comunicacion.tipo !== 'Reconocimiento') {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Tipo de usuario:', margin, yPosition);
+          doc.setFont('helvetica', 'normal');
+          doc.text(usuarioComunicacion.tipo_usuario, margin + 50, yPosition);
+          yPosition += lineHeight;
+        }
+
+        if (usuarioComunicacion.sexo && comunicacion.tipo !== 'Reconocimiento') {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Sexo:', margin, yPosition);
+          doc.setFont('helvetica', 'normal');
+          doc.text(usuarioComunicacion.sexo, margin + 50, yPosition);
+          yPosition += lineHeight;
+        }
+
+        if (comunicacion.tipo !== 'Reconocimiento') {
+          doc.setFont('helvetica', 'bold');
+          doc.text('Confidencial:', margin, yPosition);
+          doc.setFont('helvetica', 'normal');
+          doc.text(usuarioComunicacion.confidencial ? 'Sí' : 'No', margin + 50, yPosition);
+          yPosition += lineHeight;
+
+          doc.setFont('helvetica', 'bold');
+          doc.text('Autorizo contacto:', margin, yPosition);
+          doc.setFont('helvetica', 'normal');
+          doc.text(usuarioComunicacion.autorizo_contacto ? 'Sí' : 'No', margin + 50, yPosition);
+          yPosition += lineHeight;
+        }
+        yPosition += lineHeight * 0.5;
+      }
+
+      // TIPO DE COMUNICACIÓN
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorBlanco);
+      doc.text('TIPO DE COMUNICACIÓN', margin + 2, yPosition);
+      yPosition += lineHeight * 1.8;
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
+      doc.text('Tipo:', margin, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+      doc.text(comunicacion.tipo || 'N/A', margin + 25, yPosition);
+      yPosition += lineHeight;
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
+      doc.text('Categoría:', margin, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+      doc.text(categoriaComunicacion?.nombre_categoria || 'N/A', margin + 30, yPosition);
+      yPosition += lineHeight * 1.5;
+
+      // DETALLES
+      const detallesTitulo = comunicacion.tipo === 'Reconocimiento' 
+        ? 'DETALLES DEL RECONOCIMIENTO'
+        : 'DETALLES DE LA QUEJA O SUGERENCIA';
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorBlanco);
+      doc.text(detallesTitulo, margin + 2, yPosition);
+      yPosition += lineHeight * 1.8;
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
+      doc.text('Fecha:', margin, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+      const fechaFormateada = comunicacion.fecha_recepcion 
+        ? new Date(comunicacion.fecha_recepcion).toLocaleDateString('es-MX')
+        : 'N/A';
+      doc.text(fechaFormateada, margin + 25, yPosition);
+      yPosition += lineHeight * 1.2;
+
+      if (comunicacion.area_involucrada) {
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorGrisOscuro);
+        doc.text('Área involucrada:', margin, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colorNegro);
+        doc.text(comunicacion.area_involucrada, margin + 45, yPosition);
+        yPosition += lineHeight * 1.5;
+      }
+
+      // Descripción de hechos
+      const descripcionTexto = comunicacion.descripcion || 'No se proporcionó descripción';
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
+      doc.text('Descripción de hechos:', margin, yPosition);
+      yPosition += lineHeight * 0.8;
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+      const descripcionLines = doc.splitTextToSize(descripcionTexto, pageWidth - (margin * 2));
+      descripcionLines.forEach((line: string) => {
+        if (yPosition > doc.internal.pageSize.getHeight() - 30) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        doc.text(line, margin, yPosition);
+        yPosition += lineHeight;
+      });
+      yPosition += lineHeight * 0.8;
+
+      // Propuesta de mejora (extraer de las notas del seguimiento si existe)
+      if (comunicacion.tipo !== 'Reconocimiento' && seguimiento?.notas) {
+        const notas = seguimiento.notas;
+        const propuestaIndex = notas.indexOf('Propuesta de mejora:');
+        
+        if (propuestaIndex !== -1) {
+          let propuestaTexto = notas.substring(propuestaIndex + 'Propuesta de mejora:'.length).trim();
+          propuestaTexto = propuestaTexto.replace(/^\n+/, '').trim();
+          
+          if (propuestaTexto && propuestaTexto.length > 0) {
+            if (yPosition > doc.internal.pageSize.getHeight() - 40) {
+              doc.addPage();
+              yPosition = margin;
+            }
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...colorGrisOscuro);
+            doc.text('Propuesta de mejora (opcional):', margin, yPosition);
+            yPosition += lineHeight * 0.8;
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(...colorNegro);
+            const propuestaLines = doc.splitTextToSize(propuestaTexto, pageWidth - (margin * 2));
+            propuestaLines.forEach((line: string) => {
+              if (yPosition > doc.internal.pageSize.getHeight() - 30) {
+                doc.addPage();
+                yPosition = margin;
+              }
+              doc.text(line, margin, yPosition);
+              yPosition += lineHeight;
+            });
+            yPosition += lineHeight * 0.8;
+          }
+        }
+      }
+
+      // EVIDENCIA
+      if (evidencias.length > 0) {
+        if (yPosition > doc.internal.pageSize.getHeight() - 30) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        doc.setFillColor(...colorAzulOscuro);
+        doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorBlanco);
+        doc.text('EVIDENCIA (Opcional)', margin + 2, yPosition);
+        yPosition += lineHeight * 1.8;
+
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colorNegro);
+        doc.text(`Se adjuntan ${evidencias.length} evidencia(s):`, margin, yPosition);
+        yPosition += lineHeight * 1.2;
+
+        evidencias.forEach((evidencia, index) => {
+          if (yPosition > doc.internal.pageSize.getHeight() - 30) {
+            doc.addPage();
+            yPosition = margin;
+          }
+          doc.setFont('helvetica', 'bold');
+          doc.setTextColor(...colorGrisOscuro);
+          doc.text(`${index + 1}.`, margin + 5, yPosition);
+          doc.setFont('helvetica', 'normal');
+          doc.setTextColor(...colorNegro);
+          doc.text(evidencia.nombre_archivo || 'N/A', margin + 15, yPosition);
+          yPosition += lineHeight;
+        });
+        yPosition += lineHeight * 0.5;
+      } else {
+        if (yPosition > doc.internal.pageSize.getHeight() - 30) {
+          doc.addPage();
+          yPosition = margin;
+        }
+        doc.setFillColor(...colorAzulOscuro);
+        doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'bold');
+        doc.setTextColor(...colorBlanco);
+        doc.text('EVIDENCIA (Opcional)', margin + 2, yPosition);
+        yPosition += lineHeight * 1.8;
+
+        doc.setFontSize(12);
+        doc.setFont('helvetica', 'normal');
+        doc.setTextColor(...colorNegro);
+        doc.text('No se adjunta evidencia', margin, yPosition);
+        yPosition += lineHeight;
+      }
+
+      // FIRMA
+      if (yPosition > doc.internal.pageSize.getHeight() - 50) {
+        doc.addPage();
+        yPosition = margin;
+      }
+      doc.setFillColor(...colorAzulOscuro);
+      doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorBlanco);
+      doc.text('FIRMA (Opcional)', margin + 2, yPosition);
+      yPosition += lineHeight * 2;
+
+      doc.setFontSize(12);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+      doc.setFont('helvetica', 'bold');
+      doc.setTextColor(...colorGrisOscuro);
+      doc.text('Firma del remitente:', margin, yPosition);
+      yPosition += lineHeight * 2.5;
+
+      doc.setFont('helvetica', 'bold');
+      doc.text('Fecha:', margin, yPosition);
+      doc.setFont('helvetica', 'normal');
+      doc.setTextColor(...colorNegro);
+      doc.text(new Date().toLocaleDateString('es-MX'), margin + 25, yPosition);
+
+      // Descargar PDF
+      const fileName = `formato_${comunicacion.folio || comunicacion.id_comunicacion}_${new Date().toISOString().split('T')[0]}.pdf`;
+      doc.save(fileName);
+
+      console.log('✅ PDF descargado exitosamente');
+    } catch (error) {
+      console.error('Error al generar PDF:', error);
+      alert('Error al generar el PDF. Por favor, intente nuevamente.');
+    } finally {
+      setGenerandoPDF(false);
     }
   };
 
@@ -130,7 +634,41 @@ const ConsultaFolio = () => {
 
           {comunicacion && (
             <div className="resultado-section">
-              <h2 className="resultado-title">Información de su Comunicación</h2>
+              <div style={{ display: 'flex', justifyContent: 'space-between', alignItems: 'center', marginBottom: '1rem' }}>
+                <h2 className="resultado-title">Información de su Comunicación</h2>
+                <button
+                  onClick={descargarPDF}
+                  disabled={generandoPDF}
+                  style={{
+                    display: 'flex',
+                    alignItems: 'center',
+                    gap: '0.5rem',
+                    padding: '0.75rem 1.5rem',
+                    backgroundColor: '#dc3545',
+                    color: 'white',
+                    border: 'none',
+                    borderRadius: '6px',
+                    cursor: generandoPDF ? 'not-allowed' : 'pointer',
+                    fontSize: '0.95rem',
+                    fontWeight: '500',
+                    transition: 'background-color 0.2s',
+                    opacity: generandoPDF ? 0.6 : 1
+                  }}
+                  onMouseOver={(e) => {
+                    if (!generandoPDF) {
+                      e.currentTarget.style.backgroundColor = '#c82333';
+                    }
+                  }}
+                  onMouseOut={(e) => {
+                    if (!generandoPDF) {
+                      e.currentTarget.style.backgroundColor = '#dc3545';
+                    }
+                  }}
+                >
+                  <MdPictureAsPdf size={20} />
+                  {generandoPDF ? 'Generando PDF...' : 'Descargar PDF'}
+                </button>
+              </div>
               
               <div className="resultado-card">
                 <div className="resultado-row">
