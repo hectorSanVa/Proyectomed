@@ -154,12 +154,21 @@ const PORT = process.env.PORT || 3000;
 async function startServer() {
   try {
     // Ejecutar migraciones antes de iniciar el servidor
-    await runMigrations();
+    // Si fallan, el servidor aún puede iniciar (las migraciones se pueden ejecutar manualmente)
+    try {
+      await runMigrations();
+      console.log('✅ Migraciones completadas exitosamente');
+    } catch (migrationError: any) {
+      console.error('⚠️ Error en migraciones (el servidor continuará iniciando):', migrationError.message);
+      console.error('⚠️ Stack:', migrationError.stack);
+      // No detener el servidor si las migraciones fallan
+      // El servidor puede funcionar si las tablas ya existen
+    }
     
     app.listen(PORT, () => {
-      console.log(`Servidor corriendo en puerto ${PORT}`);
-      console.log(`API disponible en http://localhost:${PORT}`);
-      console.log(`Rutas disponibles:`);
+      console.log(`✅ Servidor corriendo en puerto ${PORT}`);
+      console.log(`🌐 API disponible en http://localhost:${PORT}`);
+      console.log(`📋 Rutas disponibles:`);
       console.log(`  - GET  /categorias`);
       console.log(`  - GET  /estados`);
       console.log(`  - GET  /comunicaciones`);
@@ -169,8 +178,9 @@ async function startServer() {
       console.log(`  - GET  /configuracion/data`);
       console.log(`  - PUT  /configuracion/data`);
     });
-  } catch (error) {
-    console.error('❌ Error al iniciar el servidor:', error);
+  } catch (error: any) {
+    console.error('❌ Error crítico al iniciar el servidor:', error);
+    console.error('❌ Stack:', error.stack);
     process.exit(1);
   }
 }

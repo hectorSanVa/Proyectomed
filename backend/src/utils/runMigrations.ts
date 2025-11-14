@@ -10,6 +10,15 @@ export async function runMigrations() {
   try {
     console.log('🔄 Verificando migraciones de base de datos...');
 
+    // Verificar conexión a la base de datos primero
+    try {
+      await pool.query('SELECT 1');
+      console.log('✅ Conexión a la base de datos verificada');
+    } catch (dbError: any) {
+      console.error('❌ Error al conectar a la base de datos:', dbError.message);
+      throw new Error(`No se pudo conectar a la base de datos: ${dbError.message}`);
+    }
+
     // Verificar si las tablas principales ya existen
     const checkTables = await pool.query(`
       SELECT table_name 
