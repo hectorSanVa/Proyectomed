@@ -406,14 +406,15 @@ const SeguimientoPage = () => {
                         notasParaUsuario = notas;
                       }
                       
+                      const seguimiento = selectedComunicacion.seguimiento;
                       return (
                         <div className="modal-respuesta">
                           <div className="respuesta-content">
                             {notasParaUsuario}
                           </div>
-                          {selectedComunicacion.seguimiento?.fecha_resolucion && (
+                          {seguimiento?.fecha_resolucion && (
                             <div className="modal-respuesta-fecha">
-                              Resuelto el: {formatFecha(selectedComunicacion.seguimiento.fecha_resolucion)}
+                              Resuelto el: {formatFecha(seguimiento.fecha_resolucion)}
                             </div>
                           )}
                         </div>
