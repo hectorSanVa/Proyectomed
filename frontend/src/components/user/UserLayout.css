@@ -42,34 +42,53 @@
   padding: 2rem;
 }
 
-/* Botón hamburguesa para móviles */
+/* Botón hamburguesa para móviles - Diseño Profesional */
 .mobile-menu-btn {
   display: none;
   position: fixed;
   top: 1rem;
   left: 1rem;
-  z-index: 998;
-  background-color: var(--unach-azul-oscuro);
+  z-index: 1001;
+  background: linear-gradient(135deg, var(--unach-azul-oscuro) 0%, #1a2f5c 100%);
   color: white;
-  border: none;
-  border-radius: 8px;
-  width: 48px;
-  height: 48px;
-  font-size: 1.5rem;
+  border: 2px solid rgba(255, 255, 255, 0.2);
+  border-radius: 12px;
+  width: 50px;
+  height: 50px;
+  font-size: 1.6rem;
   cursor: pointer;
   align-items: center;
   justify-content: center;
-  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
-  transition: background-color 0.3s ease, transform 0.2s ease;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.25),
+    0 2px 4px rgba(0, 0, 0, 0.15),
+    inset 0 1px 0 rgba(255, 255, 255, 0.1);
+  transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+  backdrop-filter: blur(10px);
 }
 
 .mobile-menu-btn:hover {
-  background-color: #152047;
-  transform: scale(1.05);
+  background: linear-gradient(135deg, #1a2f5c 0%, var(--unach-azul-oscuro) 100%);
+  transform: translateY(-2px) scale(1.05);
+  box-shadow: 
+    0 6px 16px rgba(0, 0, 0, 0.3),
+    0 3px 6px rgba(0, 0, 0, 0.2),
+    inset 0 1px 0 rgba(255, 255, 255, 0.15);
+  border-color: rgba(255, 255, 255, 0.3);
 }
 
 .mobile-menu-btn:active {
-  transform: scale(0.95);
+  transform: translateY(0) scale(0.98);
+  box-shadow: 
+    0 2px 8px rgba(0, 0, 0, 0.2),
+    inset 0 2px 4px rgba(0, 0, 0, 0.2);
+}
+
+.mobile-menu-btn:focus {
+  outline: none;
+  box-shadow: 
+    0 4px 12px rgba(0, 0, 0, 0.25),
+    0 0 0 3px rgba(25, 45, 99, 0.3);
 }
 
 /* Tablets (768px - 1024px) */
@@ -100,6 +119,9 @@
     top: 0.75rem;
     left: 0.75rem;
     z-index: 1001; /* Asegurar que esté sobre el header */
+    width: 48px;
+    height: 48px;
+    font-size: 1.5rem;
   }
 
   .user-main {
@@ -113,9 +135,10 @@
   .mobile-menu-btn {
     top: 0.75rem;
     left: 0.75rem;
-    width: 44px;
-    height: 44px;
-    font-size: 1.3rem;
+    width: 46px;
+    height: 46px;
+    font-size: 1.4rem;
+    border-radius: 10px;
   }
 
   .user-main {
