@@ -250,7 +250,15 @@ const GestionReconocimientos = () => {
           evidenciaService.getByComunicacionId(comunicacion.id_comunicacion),
         ]);
         setHistorialEstados(historial);
-        setEvidencias(evidenciasData);
+        
+        // Filtrar evidencias: solo mostrar las subidas por el usuario, NO los PDFs generados
+        // Los PDFs generados tienen un patrón específico en el nombre: "formato_D0009_11_FMHT_25_202..."
+        const evidenciasUsuario = evidenciasData.filter((ev: Evidencia) => {
+          const nombreArchivo = ev.nombre_archivo?.toLowerCase() || '';
+          // Excluir PDFs generados (tienen "formato_" en el nombre)
+          return !nombreArchivo.startsWith('formato_');
+        });
+        setEvidencias(evidenciasUsuario);
 
         // Cargar datos del usuario si existe
         if (comunicacion.id_usuario) {
@@ -591,26 +599,7 @@ const GestionReconocimientos = () => {
       });
       yPosition += lineHeight * 0.8;
 
-      if (selectedComunicacion.seguimiento?.notas) {
-        if (yPosition > doc.internal.pageSize.getHeight() - 40) {
-          doc.addPage();
-          yPosition = margin;
-        }
-        doc.setFont('helvetica', 'bold');
-        doc.text('Propuesta de mejora (opcional):', margin, yPosition);
-        yPosition += lineHeight;
-        doc.setFont('helvetica', 'normal');
-        const notasLines = doc.splitTextToSize(selectedComunicacion.seguimiento.notas, pageWidth - (margin * 2));
-        notasLines.forEach((line: string) => {
-          if (yPosition > doc.internal.pageSize.getHeight() - 30) {
-            doc.addPage();
-            yPosition = margin;
-          }
-          doc.text(line, margin, yPosition);
-          yPosition += lineHeight;
-        });
-        yPosition += lineHeight;
-      }
+      // NOTA: Los reconocimientos NO tienen propuesta de mejora, así que omitimos esa sección
 
       // EVIDENCIA con fondo destacado
       if (yPosition > doc.internal.pageSize.getHeight() - 40) {

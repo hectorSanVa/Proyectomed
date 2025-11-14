@@ -252,15 +252,32 @@ const GestionSugerencias = () => {
     setModalMode('view');
     setShowModal(true);
     
-    // Cargar historial de estados, evidencias y usuario
+    // Cargar historial de estados, evidencias, seguimiento y usuario
     if (comunicacion.id_comunicacion) {
       try {
-        const [historial, evidenciasData] = await Promise.all([
+        const [historial, evidenciasData, seguimientoData] = await Promise.all([
           historialEstadoService.getByComunicacionId(comunicacion.id_comunicacion),
           evidenciaService.getByComunicacionId(comunicacion.id_comunicacion),
+          seguimientoService.getByComunicacionId(comunicacion.id_comunicacion).catch(() => null),
         ]);
         setHistorialEstados(historial);
-        setEvidencias(evidenciasData);
+        
+        // Filtrar evidencias: solo mostrar las subidas por el usuario, NO los PDFs generados
+        // Los PDFs generados tienen un patrón específico en el nombre: "formato_D0009_11_FMHT_25_202..."
+        const evidenciasUsuario = evidenciasData.filter((ev: Evidencia) => {
+          const nombreArchivo = ev.nombre_archivo?.toLowerCase() || '';
+          // Excluir PDFs generados (tienen "formato_" en el nombre)
+          return !nombreArchivo.startsWith('formato_');
+        });
+        setEvidencias(evidenciasUsuario);
+        
+        // Actualizar la comunicación con el seguimiento completo si no lo tiene
+        if (seguimientoData && !comunicacion.seguimiento) {
+          setSelectedComunicacion({
+            ...comunicacion,
+            seguimiento: seguimientoData
+          });
+        }
 
         // Cargar datos del usuario si existe
         if (comunicacion.id_usuario) {
@@ -445,14 +462,32 @@ const GestionSugerencias = () => {
       doc.setTextColor(...colorNegro);
       
       // Verificar si es confidencial o anónima
-      const esConfidencial = usuarioComunicacion?.confidencial || !selectedComunicacion.id_usuario;
+      // Lógica simplificada:
+      // - Si NO hay id_usuario → Anónimo (no se guardó usuario)
+      // - Si hay id_usuario y confidencial = true → Confidencial (ocultar datos)
+      // - Si hay id_usuario y confidencial = false → Mostrar todos los datos
+      const tieneUsuario = !!selectedComunicacion.id_usuario && !!usuarioComunicacion;
+      const esConfidencial = usuarioComunicacion?.confidencial === true;
+      const esAnonimo = !selectedComunicacion.id_usuario;
       
-      if (esConfidencial) {
-        // Si es confidencial, no mostrar datos personales
+      if (esAnonimo) {
+        // Comunicación anónima (sin id_usuario)
         doc.setFont('helvetica', 'bold');
         doc.text('Tipo:', margin, yPosition);
         doc.setFont('helvetica', 'normal');
-        doc.text('Comunicación Confidencial/Anónima', margin + 20, yPosition);
+        doc.text('Comunicación Anónima', margin + 20, yPosition);
+        yPosition += lineHeight;
+        doc.setFont('helvetica', 'italic');
+        doc.setTextColor(...colorGrisClaro);
+        doc.text('Esta comunicación fue enviada de forma anónima. No se guardaron datos personales del remitente.', margin, yPosition, { maxWidth: pageWidth - (margin * 2) });
+        doc.setTextColor(...colorNegro);
+        yPosition += lineHeight * 1.5;
+      } else if (esConfidencial) {
+        // Comunicación confidencial (con usuario pero confidencial = true)
+        doc.setFont('helvetica', 'bold');
+        doc.text('Tipo:', margin, yPosition);
+        doc.setFont('helvetica', 'normal');
+        doc.text('Comunicación Confidencial', margin + 20, yPosition);
         yPosition += lineHeight;
         doc.setFont('helvetica', 'italic');
         doc.setTextColor(...colorGrisClaro);
@@ -548,23 +583,7 @@ const GestionSugerencias = () => {
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...colorNegro);
       
-      // Asunto (resumen de la descripción)
-      const asunto = selectedComunicacion.descripcion 
-        ? (selectedComunicacion.descripcion.length > 80 
-            ? selectedComunicacion.descripcion.substring(0, 80) + '...' 
-            : selectedComunicacion.descripcion)
-        : 'N/A';
-      doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colorGrisOscuro);
-      doc.text('Asunto:', margin, yPosition);
-      doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colorAzulClaro);
-      const asuntoLines = doc.splitTextToSize(asunto, pageWidth - (margin * 2) - 25);
-      asuntoLines.forEach((line: string, index: number) => {
-        doc.text(line, margin + 25, yPosition + (index * lineHeight));
-      });
-      yPosition += (asuntoLines.length * lineHeight) + lineHeight * 0.5;
-      
+      // Fecha (eliminamos "Asunto" porque no existe en el formulario)
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...colorGrisOscuro);
       doc.text('Fecha:', margin, yPosition);
@@ -584,13 +603,18 @@ const GestionSugerencias = () => {
       doc.text(selectedComunicacion.area_involucrada || 'N/A', margin + 45, yPosition);
       yPosition += lineHeight * 1.5;
 
+      // Descripción de hechos (SIEMPRE debe aparecer)
+      const descripcionTexto = selectedComunicacion.descripcion || 'No se proporcionó descripción';
       doc.setFont('helvetica', 'bold');
       doc.setTextColor(...colorGrisOscuro);
       doc.text('Descripción de hechos:', margin, yPosition);
-      yPosition += lineHeight;
+      yPosition += lineHeight * 0.8;
       doc.setFont('helvetica', 'normal');
       doc.setTextColor(...colorNegro);
-      const descripcionLines = doc.splitTextToSize(selectedComunicacion.descripcion || 'N/A', pageWidth - (margin * 2));
+      const descripcionLines = doc.splitTextToSize(descripcionTexto, pageWidth - (margin * 2));
+      if (descripcionLines.length === 0) {
+        descripcionLines.push('No se proporcionó descripción');
+      }
       descripcionLines.forEach((line: string) => {
         if (yPosition > doc.internal.pageSize.getHeight() - 30) {
           doc.addPage();
@@ -601,25 +625,42 @@ const GestionSugerencias = () => {
       });
       yPosition += lineHeight * 0.8;
 
+      // Propuesta de mejora (extraer de las notas del seguimiento si existe)
       if (selectedComunicacion.seguimiento?.notas) {
-        if (yPosition > doc.internal.pageSize.getHeight() - 40) {
-          doc.addPage();
-          yPosition = margin;
-        }
-        doc.setFont('helvetica', 'bold');
-        doc.text('Propuesta de mejora (opcional):', margin, yPosition);
-        yPosition += lineHeight;
-        doc.setFont('helvetica', 'normal');
-        const notasLines = doc.splitTextToSize(selectedComunicacion.seguimiento.notas, pageWidth - (margin * 2));
-        notasLines.forEach((line: string) => {
-          if (yPosition > doc.internal.pageSize.getHeight() - 30) {
-            doc.addPage();
-            yPosition = margin;
+        const notas = selectedComunicacion.seguimiento.notas;
+        // Buscar "Propuesta de mejora:" en las notas (puede estar después de las notas de prioridad)
+        const propuestaIndex = notas.indexOf('Propuesta de mejora:');
+        
+        if (propuestaIndex !== -1) {
+          // Extraer solo la propuesta de mejora de las notas (desde "Propuesta de mejora:" hasta el final)
+          let propuestaTexto = notas.substring(propuestaIndex + 'Propuesta de mejora:'.length).trim();
+          
+          // Limpiar posibles saltos de línea al inicio
+          propuestaTexto = propuestaTexto.replace(/^\n+/, '').trim();
+          
+          if (propuestaTexto && propuestaTexto.length > 0) {
+            if (yPosition > doc.internal.pageSize.getHeight() - 40) {
+              doc.addPage();
+              yPosition = margin;
+            }
+            doc.setFont('helvetica', 'bold');
+            doc.setTextColor(...colorGrisOscuro);
+            doc.text('Propuesta de mejora (opcional):', margin, yPosition);
+            yPosition += lineHeight * 0.8;
+            doc.setFont('helvetica', 'normal');
+            doc.setTextColor(...colorNegro);
+            const propuestaLines = doc.splitTextToSize(propuestaTexto, pageWidth - (margin * 2));
+            propuestaLines.forEach((line: string) => {
+              if (yPosition > doc.internal.pageSize.getHeight() - 30) {
+                doc.addPage();
+                yPosition = margin;
+              }
+              doc.text(line, margin, yPosition);
+              yPosition += lineHeight;
+            });
+            yPosition += lineHeight * 0.8;
           }
-          doc.text(line, margin, yPosition);
-          yPosition += lineHeight;
-        });
-        yPosition += lineHeight;
+        }
       }
 
       // EVIDENCIA con fondo destacado

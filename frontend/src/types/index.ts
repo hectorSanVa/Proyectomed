@@ -39,6 +39,18 @@ export interface ComunicacionCreate {
   area_involucrada?: string;
   medio?: 'F' | 'D';
   correo?: string; // Correo para asociar el folio en la base de datos
+  anonimo?: boolean; // Si es true, no se crea/usuario (id_usuario = null)
+  // Datos completos del usuario para guardar/actualizar
+  usuario?: {
+    nombre?: string;
+    telefono?: string;
+    semestre_area?: string;
+    tipo_usuario?: 'Estudiante' | 'Docente' | 'Administrativo' | 'Servicios Generales';
+    sexo?: 'Mujer' | 'Hombre' | 'Prefiero no responder';
+    confidencial?: boolean;
+    autorizo_contacto?: boolean;
+  };
+  propuesta_mejora?: string; // Para quejas y sugerencias
 }
 
 // Tipos de usuario

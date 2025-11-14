@@ -124,26 +124,69 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
         return;
       }
 
-      // Lógica de anonimato y seguimiento:
-      // - Si confidencial = true → Comunicación completamente anónima (id_usuario = null)
-      // - Si confidencial = false y hay correo → Crear/obtener usuario para seguimiento
+      // VALIDACIÓN: Debe marcar al menos una opción (confidencial O autorizo contacto)
+      if (!confidencial && !autorizoContacto) {
+        showToast('Debe seleccionar al menos una opción: "Comunicación anónima" o "Autorizo contacto"', 'error');
+        setLoading(false);
+        return;
+      }
+
+      // VALIDACIÓN: Si marca "autorizo contacto", debe proporcionar correo
       const correoUsuario = usuario?.correo || correo || null;
-      const esAnonimo = confidencial || !correoUsuario; // Anónimo si está marcado como confidencial o no hay correo
+      if (autorizoContacto && !correoUsuario) {
+        showToast('Si autoriza contacto, debe proporcionar su correo electrónico', 'error');
+        setLoading(false);
+        return;
+      }
+
+      // Lógica de anonimato y seguimiento:
+      // - Si confidencial = true → Comunicación completamente anónima (NO se guardan datos personales, id_usuario = null)
+      // - Si autorizo contacto = true Y hay correo → Crear/obtener usuario para seguimiento (se guardan datos)
+      // NOTA: "Confidencial" y "autorizo contacto" son mutuamente excluyentes
+      const esAnonimo = confidencial; // Anónimo SOLO si está marcado como confidencial
+      const debeGuardarUsuario = autorizoContacto && !confidencial && correoUsuario; // Guardar usuario solo si autoriza contacto, NO es confidencial y hay correo
 
       // Crear comunicación
-      // El backend se encargará de crear/obtener el usuario si no es anónimo
+      // El backend se encargará de crear/obtener el usuario si debeGuardarUsuario es true
       const comunicacionData: ComunicacionCreate = {
         tipo: tipoComunicacion,
-        id_usuario: null, // El backend lo asignará si no es anónimo
+        id_usuario: null, // El backend lo asignará si debeGuardarUsuario es true
         id_categoria: categoria,
         descripcion,
         area_involucrada: areaInvolucrada,
         medio: 'D', // Digital
-        correo: correoUsuario || undefined, // Correo para crear/obtener usuario si no es anónimo
-        anonimo: esAnonimo // Indicar si es anónimo o no
+        correo: debeGuardarUsuario ? correoUsuario : undefined, // Correo solo si debemos guardar usuario
+        anonimo: esAnonimo, // Indicar si es anónimo o no
+        // Enviar datos completos del usuario para guardar correctamente (solo si debeGuardarUsuario es true)
+        usuario: debeGuardarUsuario ? {
+          nombre: nombre.trim() || undefined, // Enviar undefined si está vacío
+          telefono: telefono.trim() || undefined,
+          semestre_area: semestreArea.trim() || undefined,
+          tipo_usuario: tipoUsuario || 'Estudiante', // Siempre enviar un valor válido
+          sexo: sexo || 'Prefiero no responder', // Siempre enviar un valor válido
+          confidencial: false, // Si autoriza contacto, confidencial es siempre false
+          autorizo_contacto: true // Si llegamos aquí, autoriza contacto es siempre true
+        } : undefined,
+        // Propuesta de mejora solo para quejas y sugerencias
+        propuesta_mejora: (tipoComunicacion !== 'Reconocimiento' && propuestaMejora) ? propuestaMejora : undefined
       };
 
+      console.log('📤 Enviando comunicación al backend:', {
+        tipo: comunicacionData.tipo,
+        anonimo: comunicacionData.anonimo,
+        tieneCorreo: !!comunicacionData.correo,
+        tieneUsuario: !!comunicacionData.usuario,
+        usuarioConfidencial: comunicacionData.usuario?.confidencial,
+        usuarioAutorizoContacto: comunicacionData.usuario?.autorizo_contacto
+      });
+      
       const comunicacion = await comunicacionService.create(comunicacionData);
+      
+      console.log('✅ Comunicación creada:', {
+        id_comunicacion: comunicacion.id_comunicacion,
+        folio: comunicacion.folio,
+        id_usuario: comunicacion.id_usuario
+      });
       
       // Subir archivos si hay alguno
       if (archivos.length > 0 && comunicacion.id_comunicacion) {
@@ -347,23 +390,27 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
 
               <div className="form-group">
                 <label htmlFor="correo">
-                  Correo electrónico {!confidencial && tipoComunicacion !== 'Reconocimiento' && <span className="required">*</span>}
-                  {tipoComunicacion === 'Reconocimiento' && <span style={{ fontSize: '0.85rem', color: '#666', fontWeight: 'normal' }}> (Opcional)</span>}
+                  Correo electrónico 
+                  {autorizoContacto && <span className="required">*</span>}
+                  {!autorizoContacto && tipoComunicacion !== 'Reconocimiento' && !confidencial && <span style={{ fontSize: '0.85rem', color: '#666', fontWeight: 'normal' }}> (Opcional)</span>}
+                  {tipoComunicacion === 'Reconocimiento' && !confidencial && <span style={{ fontSize: '0.85rem', color: '#666', fontWeight: 'normal' }}> (Opcional)</span>}
                 </label>
                 <input
                   type="email"
                   id="correo"
                   value={correo}
                   onChange={(e) => setCorreo(e.target.value)}
-                  required={!confidencial && tipoComunicacion !== 'Reconocimiento'}
+                  required={autorizoContacto}
                   disabled={confidencial}
-                  placeholder={confidencial ? "No requerido para comunicaciones anónimas" : tipoComunicacion === 'Reconocimiento' ? "Opcional - Para consultar el estado de tu reconocimiento" : "Para consultar el estado de tu comunicación"}
+                  placeholder={confidencial ? "No requerido para comunicaciones anónimas" : autorizoContacto ? "Obligatorio - Para dar seguimiento a tu caso" : tipoComunicacion === 'Reconocimiento' ? "Opcional - Para consultar el estado de tu reconocimiento" : "Opcional - Para consultar el estado de tu comunicación"}
                 />
                 {!confidencial && (
                   <small className="form-help-text">
-                    {tipoComunicacion === 'Reconocimiento' 
-                      ? "Tu correo se usará solo para consultar el estado de tu reconocimiento. Tu identidad permanece protegida."
-                      : "Tu correo se usará solo para consultar el estado de tu comunicación. Tu identidad permanece protegida."}
+                    {autorizoContacto 
+                      ? "✅ Tu correo es obligatorio porque autorizaste contacto. Podremos comunicarnos contigo para dar seguimiento."
+                      : tipoComunicacion === 'Reconocimiento' 
+                        ? "Tu correo se usará solo para consultar el estado de tu reconocimiento. Tu identidad permanece protegida."
+                        : "Tu correo se usará solo para consultar el estado de tu comunicación. Tu identidad permanece protegida."}
                   </small>
                 )}
               </div>
@@ -439,11 +486,18 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
                   <input
                     type="checkbox"
                     checked={confidencial}
-                    onChange={(e) => setConfidencial(e.target.checked)}
+                    onChange={(e) => {
+                      setConfidencial(e.target.checked);
+                      // Si marca confidencial, desmarcar autorizo contacto
+                      if (e.target.checked) {
+                        setAutorizoContacto(false);
+                      }
+                    }}
                   />
                   {tipoComunicacion === 'Reconocimiento' 
                     ? 'Deseo que mi reconocimiento sea completamente anónimo (sin seguimiento por correo)'
                     : 'Deseo que mi comunicación sea completamente anónima (sin seguimiento por correo)'}
+                  <span className="required" style={{ marginLeft: '0.25rem' }}>*</span>
                 </label>
                 <small className="form-help-text" style={{ display: 'block', marginTop: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
                   {confidencial 
@@ -462,11 +516,38 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
                     <input
                       type="checkbox"
                       checked={autorizoContacto}
-                      onChange={(e) => setAutorizoContacto(e.target.checked)}
+                      onChange={(e) => {
+                        setAutorizoContacto(e.target.checked);
+                        // Si marca autorizo contacto, desmarcar confidencial
+                        if (e.target.checked) {
+                          setConfidencial(false);
+                        }
+                      }}
                       disabled={confidencial}
                     />
                     Autorizo que me contacten para dar seguimiento a mi caso
+                    <span className="required" style={{ marginLeft: '0.25rem' }}>*</span>
                   </label>
+                  <small className="form-help-text" style={{ display: 'block', marginTop: '0.5rem', color: '#666', fontSize: '0.9rem' }}>
+                    {autorizoContacto 
+                      ? "✅ Si autorizas contacto, tu correo es obligatorio. Podremos contactarte para dar seguimiento a tu caso."
+                      : "ℹ️ Si autorizas contacto, podremos comunicarnos contigo para dar seguimiento. Tu correo será obligatorio."}
+                  </small>
+                </div>
+              )}
+              
+              {tipoComunicacion !== 'Reconocimiento' && (
+                <div style={{ 
+                  background: '#fff3cd', 
+                  padding: '0.75rem', 
+                  borderRadius: '6px', 
+                  marginTop: '0.5rem',
+                  borderLeft: '4px solid #ffc107'
+                }}>
+                  <p style={{ margin: 0, color: '#856404', fontSize: '0.9rem' }}>
+                    <strong>⚠️ Nota importante:</strong> Debe seleccionar al menos una opción: "Comunicación anónima" o "Autorizo contacto". 
+                    Si autoriza contacto, deberá proporcionar su correo electrónico.
+                  </p>
                 </div>
               )}
             </section>
