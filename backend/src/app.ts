@@ -20,16 +20,12 @@ import { runMigrations } from "./utils/runMigrations";
 const app = express();
 
 // Configuración de CORS
-// Permite múltiples orígenes: localhost para desarrollo local, y frontend desplegado
+// Solo permite orígenes de producción (frontend desplegado)
+// NO permite localhost - todo debe estar en producción
 const getAllowedOrigins = () => {
   const origins: string[] = [];
   
-  // Siempre permitir localhost para desarrollo local
-  origins.push('http://localhost:5173');
-  origins.push('http://localhost:3000');
-  origins.push('http://127.0.0.1:5173');
-  
-  // Agregar orígenes desde variables de entorno
+  // Agregar orígenes desde variables de entorno (solo producción)
   if (process.env.FRONTEND_URL) {
     const frontendUrls = process.env.FRONTEND_URL.split(',').map(url => url.trim());
     origins.push(...frontendUrls);
@@ -52,29 +48,32 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    // En desarrollo local, permitir cualquier origen
+    // BLOQUEAR localhost en producción - todo debe estar en servidor
+    const isLocalhost = origin.startsWith('http://localhost:') || 
+                       origin.startsWith('http://127.0.0.1:') ||
+                       origin.startsWith('http://0.0.0.0:');
+    
+    if (isLocalhost && process.env.NODE_ENV === 'production') {
+      console.warn(`⚠️ CORS: Localhost bloqueado en producción: ${origin}`);
+      return callback(new Error('Localhost no permitido en producción. Use el frontend desplegado.'));
+    }
+    
+    // En desarrollo local del backend, permitir cualquier origen (excepto si está en producción)
     if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
       return callback(null, true);
     }
     
-    // En producción, verificar si el origin está en la lista de permitidos
-    // IMPORTANTE: También permitir localhost para desarrollo local contra backend de producción
-    const isLocalhost = origin.startsWith('http://localhost:') || origin.startsWith('http://127.0.0.1:');
+    // En producción, SOLO permitir orígenes configurados en variables de entorno
     const isAllowed = allowedOrigins.some(allowed => {
       return origin === allowed || origin.startsWith(allowed);
     });
     
-    if (isAllowed || isLocalhost) {
+    if (isAllowed) {
       callback(null, true);
     } else {
       console.warn(`⚠️ CORS: Origen no permitido: ${origin}`);
       console.warn(`⚠️ Orígenes permitidos:`, allowedOrigins);
-      // Permitir localhost incluso en producción para desarrollo local
-      if (isLocalhost) {
-        callback(null, true);
-      } else {
-        callback(new Error('No permitido por CORS'));
-      }
+      callback(new Error('No permitido por CORS. Configure FRONTEND_URL en Render.'));
     }
   },
   credentials: true,
