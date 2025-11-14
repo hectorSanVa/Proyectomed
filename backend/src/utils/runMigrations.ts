@@ -25,6 +25,7 @@ export async function runMigrations() {
     }
 
     // Verificar si las tablas principales ya existen
+    /*
     const checkTables = await pool.query(`
       SELECT table_name 
       FROM information_schema.tables 
@@ -36,7 +37,7 @@ export async function runMigrations() {
       console.log("✅ Las tablas ya existen, saltando migraciones");
       return;
     }
-
+    */
     console.log("📦 Ejecutando migraciones...");
 
     // Crear tablas
