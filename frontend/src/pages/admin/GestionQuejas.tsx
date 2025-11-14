@@ -796,8 +796,7 @@ const GestionQuejas = () => {
       const fileName = `formato_${selectedComunicacion.folio || selectedComunicacion.id_comunicacion}_${new Date().toISOString().split('T')[0]}.pdf`;
       const pdfBlob = doc.output('blob');
       
-      // Descargar PDF localmente SOLO (NO guardar como evidencia)
-      // Los PDFs generados NO deben aparecer en la lista de evidencias del usuario
+      // Descargar PDF localmente
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -807,7 +806,20 @@ const GestionQuejas = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      showToast('PDF descargado exitosamente', 'success');
+      // Guardar PDF en el servidor para que el admin pueda descargarlo desde cualquier computadora
+      // NOTA: Este PDF se guardará como evidencia pero será filtrado de la lista "Evidencias Adjuntas"
+      // para que solo muestre los archivos subidos por el usuario
+      if (selectedComunicacion.id_comunicacion) {
+        try {
+          await evidenciaService.uploadPDF(selectedComunicacion.id_comunicacion, pdfBlob, fileName);
+          showToast('PDF descargado y guardado en el servidor', 'success');
+        } catch (uploadError) {
+          console.warn('PDF descargado localmente, pero no se pudo guardar en el servidor:', uploadError);
+          showToast('PDF descargado. No se pudo guardar en el servidor', 'warning');
+        }
+      } else {
+        showToast('PDF descargado exitosamente', 'success');
+      }
     } catch (error) {
       console.error('Error al generar PDF:', error);
       showToast('Error al generar el PDF del formato', 'error');
