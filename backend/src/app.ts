@@ -20,12 +20,16 @@ import { runMigrations } from "./utils/runMigrations";
 const app = express();
 
 // Configuración de CORS
-// Solo permite orígenes de producción (frontend desplegado)
-// NO permite localhost - todo debe estar en producción
+// Permite localhost para desarrollo y orígenes de producción configurados
 const getAllowedOrigins = () => {
   const origins: string[] = [];
   
-  // Agregar orígenes desde variables de entorno (solo producción)
+  // Siempre permitir localhost para desarrollo local
+  origins.push('http://localhost:5173');
+  origins.push('http://localhost:3000');
+  origins.push('http://127.0.0.1:5173');
+  
+  // Agregar orígenes desde variables de entorno (producción)
   if (process.env.FRONTEND_URL) {
     const frontendUrls = process.env.FRONTEND_URL.split(',').map(url => url.trim());
     origins.push(...frontendUrls);
@@ -48,22 +52,21 @@ const corsOptions = {
       return callback(null, true);
     }
     
-    // BLOQUEAR localhost en producción - todo debe estar en servidor
+    // Permitir localhost siempre (para desarrollo)
     const isLocalhost = origin.startsWith('http://localhost:') || 
                        origin.startsWith('http://127.0.0.1:') ||
                        origin.startsWith('http://0.0.0.0:');
     
-    if (isLocalhost && process.env.NODE_ENV === 'production') {
-      console.warn(`⚠️ CORS: Localhost bloqueado en producción: ${origin}`);
-      return callback(new Error('Localhost no permitido en producción. Use el frontend desplegado.'));
+    if (isLocalhost) {
+      return callback(null, true);
     }
     
-    // En desarrollo local del backend, permitir cualquier origen (excepto si está en producción)
+    // En desarrollo local del backend, permitir cualquier origen
     if (process.env.NODE_ENV === 'development' || !process.env.NODE_ENV) {
       return callback(null, true);
     }
     
-    // En producción, SOLO permitir orígenes configurados en variables de entorno
+    // En producción, permitir orígenes configurados en variables de entorno
     const isAllowed = allowedOrigins.some(allowed => {
       return origin === allowed || origin.startsWith(allowed);
     });
@@ -73,7 +76,13 @@ const corsOptions = {
     } else {
       console.warn(`⚠️ CORS: Origen no permitido: ${origin}`);
       console.warn(`⚠️ Orígenes permitidos:`, allowedOrigins);
-      callback(new Error('No permitido por CORS. Configure FRONTEND_URL en Render.'));
+      // En producción, solo permitir orígenes configurados
+      if (process.env.NODE_ENV === 'production') {
+        callback(new Error('No permitido por CORS. Configure FRONTEND_URL en Render.'));
+      } else {
+        // En desarrollo, permitir de todos modos
+        callback(null, true);
+      }
     }
   },
   credentials: true,
