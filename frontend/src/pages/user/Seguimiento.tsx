@@ -16,7 +16,7 @@ interface ComunicacionConEstado extends Comunicacion {
   seguimiento?: Seguimiento;
 }
 
-const Seguimiento = () => {
+const SeguimientoPage = () => {
   const navigate = useNavigate();
   const { isAuthenticated, session, loading: authLoading } = useUsuarioAuth();
   const [comunicaciones, setComunicaciones] = useState<ComunicacionConEstado[]>([]);
@@ -415,5 +415,5 @@ const Seguimiento = () => {
   );
 };
 
-export default Seguimiento;
+export default SeguimientoPage;
 

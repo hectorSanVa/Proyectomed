@@ -296,7 +296,7 @@ const Reportes = () => {
       const colorAzulOscuro = [25, 45, 99] as const; // #192d63 - Azul institucional
       const colorAzulClaro = [41, 128, 185] as const; // #2980b9 - Azul profesional
       const colorGrisOscuro = [44, 62, 80] as const; // #2c3e50 - Gris profesional
-      const colorGrisClaro = [108, 117, 125] as const; // #6c757d - Gris suave
+      // const colorGrisClaro = [108, 117, 125] as const; // #6c757d - Gris suave (no usado actualmente)
       const colorNegro = [33, 37, 41] as const; // #212529 - Negro suave
       const colorBlanco = [255, 255, 255] as const;
       const colorVerde = [40, 167, 69] as const; // #28a745 - Verde para estadísticas positivas
