@@ -3,7 +3,7 @@ import { useNavigate } from 'react-router-dom';
 import { useUsuarioAuth } from '../../context/UsuarioAuthContext';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import UserLayout from '../../components/user/UserLayout';
-import { MdWarning, MdLightbulb, MdStar, MdDescription, MdSearch, MdExpandMore, MdExpandLess, MdKeyboardArrowDown, MdKeyboardArrowUp, MdClose } from 'react-icons/md';
+import { MdWarning, MdLightbulb, MdStar, MdDescription, MdKeyboardArrowDown, MdKeyboardArrowUp, MdClose } from 'react-icons/md';
 import FormularioPublico from '../FormularioPublico';
 import './Buzon.css';
 

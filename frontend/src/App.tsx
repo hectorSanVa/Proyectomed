@@ -10,7 +10,7 @@ import Login from './pages/Login';
 import LoginUsuario from './pages/user/LoginUsuario';
 import RegisterUsuario from './pages/user/RegisterUsuario';
 import Buzon from './pages/user/Buzon';
-import Seguimiento from './pages/user/Seguimiento';
+import SeguimientoPage from './pages/user/Seguimiento';
 import Reconocimientos from './pages/user/Reconocimientos';
 import Contacto from './pages/user/Contacto';
 import Dashboard from './pages/admin/Dashboard';
@@ -42,7 +42,7 @@ function App() {
             
             {/* Rutas de usuario */}
             <Route path="/buzon" element={<Buzon />} />
-            <Route path="/seguimiento" element={<Seguimiento />} />
+            <Route path="/seguimiento" element={<SeguimientoPage />} />
             <Route path="/reconocimientos" element={<Reconocimientos />} />
             <Route path="/contacto" element={<Contacto />} />
             

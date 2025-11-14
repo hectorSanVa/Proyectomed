@@ -482,7 +482,7 @@ const GestionSugerencias = () => {
       // - Si NO hay id_usuario → Anónimo (no se guardó usuario)
       // - Si hay id_usuario y confidencial = true → Confidencial (ocultar datos)
       // - Si hay id_usuario y confidencial = false → Mostrar todos los datos
-      const tieneUsuario = !!selectedComunicacion.id_usuario && !!usuarioComunicacion;
+      // const tieneUsuario = !!selectedComunicacion.id_usuario && !!usuarioComunicacion; // No usado actualmente
       const esConfidencial = usuarioComunicacion?.confidencial === true;
       const esAnonimo = !selectedComunicacion.id_usuario;
       

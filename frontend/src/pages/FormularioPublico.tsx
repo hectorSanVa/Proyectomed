@@ -6,8 +6,8 @@ import { usePageTitle } from '../hooks/usePageTitle';
 import UserLayout from '../components/user/UserLayout';
 import { comunicacionService } from '../services/comunicacionService';
 import { categoriaService } from '../services/categoriaService';
-import { seguimientoService } from '../services/seguimientoService';
-import { usuarioService } from '../services/usuarioService';
+// import { seguimientoService } from '../services/seguimientoService'; // No usado actualmente
+// import { usuarioService } from '../services/usuarioService'; // No usado actualmente
 // import { usuarioService } from '../services/usuarioService'; // Ya no se usa - todas las comunicaciones son anónimas
 import { evidenciaService } from '../services/evidenciaService';
 import type { ComunicacionCreate, Categoria, Usuario, Comunicacion } from '../types';
@@ -31,7 +31,7 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
   const [success, setSuccess] = useState(false);
   const [folioGenerado, setFolioGenerado] = useState<string>('');
   const [countdown, setCountdown] = useState<number>(10);
-  const countdownIntervalRef = useRef<NodeJS.Timeout | null>(null);
+  const countdownIntervalRef = useRef<ReturnType<typeof setInterval> | null>(null);
   const successMessageRef = useRef<HTMLDivElement>(null);
 
   // Datos del remitente
@@ -62,7 +62,7 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
   // Evidencia
   const [archivos, setArchivos] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [generandoPDF, setGenerandoPDF] = useState(false);
+  // const [generandoPDF, setGenerandoPDF] = useState(false); // No usado actualmente
 
   useEffect(() => {
     // Si está autenticado, pre-llenar el correo

@@ -1,6 +1,5 @@
 import api from './api';
 import { API_ENDPOINTS } from '../config/api';
-import type { Folio } from '../types';
 
 export const folioService = {
   getAll: async () => {

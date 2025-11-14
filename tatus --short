@@ -1,10 +1,19 @@
-warning: in the working copy of 'backend/BD_RENDER.sql', CRLF will be replaced by LF the next time Git touches it
-warning: in the working copy of 'backend/src/utils/runMigrations.ts', CRLF will be replaced by LF the next time Git touches it
-warning: in the working copy of 'frontend/src/pages/admin/Configuracion.tsx', CRLF will be replaced by LF the next time Git touches it
-backend/BD Buzon de Sugerencias Unach.sql
-backend/BD_RENDER.sql
-backend/src/app.ts
-backend/src/utils/runMigrations.ts
-frontend/src/config/api.ts
-frontend/src/pages/admin/Configuracion.tsx
-frontend/src/types/index.ts
+import { Router } from "express";
+import { UsuarioController } from "../controllers/UsuarioController";
+
+const router = Router();
+
+// Rutas específicas primero (antes de las rutas con parámetros)
+router.post("/login", UsuarioController.login);
+router.get("/correo/:correo", UsuarioController.getByCorreo);
+
+// Rutas generales
+router.get("/", UsuarioController.getAll);
+router.post("/", UsuarioController.create);
+
+// Rutas con parámetros al final
+router.get("/:id", UsuarioController.getById);
+router.put("/:id", UsuarioController.update);
+router.delete("/:id", UsuarioController.delete);
+
+export default router;

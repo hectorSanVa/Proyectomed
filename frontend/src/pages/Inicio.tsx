@@ -1,4 +1,4 @@
-import { Link } from 'react-router-dom';
+// import { Link } from 'react-router-dom'; // No usado actualmente
 import { usePageTitle } from '../hooks/usePageTitle';
 import UserLayout from '../components/user/UserLayout';
 import './Inicio.css';

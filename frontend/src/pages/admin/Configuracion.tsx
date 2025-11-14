@@ -1,6 +1,6 @@
 import { useState, useEffect } from 'react';
 import AdminLayout from '../../components/admin/AdminLayout';
-import { MdSettings, MdSave, MdCheckCircle, MdError, MdCloud, MdStorage, MdUpdate } from 'react-icons/md';
+import { MdSave, MdCheckCircle, MdError, MdCloud, MdStorage, MdUpdate } from 'react-icons/md';
 import { configuracionService } from '../../services/configuracionService';
 import type { ConfigData } from '../../types';
 import './GestionComunicaciones.css';

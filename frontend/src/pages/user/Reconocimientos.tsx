@@ -81,12 +81,12 @@ const Reconocimientos = () => {
     }
   };
 
-  const getEstadoClass = (estadoNombre?: string) => {
-    if (!estadoNombre) return 'logro-azul';
-    const estado = estadoNombre.toLowerCase();
-    if (estado === 'atendida' || estado === 'cerrada') return 'logro-verde';
-    return 'logro-azul';
-  };
+  // const getEstadoClass = (estadoNombre?: string) => {
+  //   if (!estadoNombre) return 'logro-azul';
+  //   const estado = estadoNombre.toLowerCase();
+  //   if (estado === 'atendida' || estado === 'cerrada') return 'logro-verde';
+  //   return 'logro-azul';
+  // }; // No usado actualmente
 
   return (
     <UserLayout>

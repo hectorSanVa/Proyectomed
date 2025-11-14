@@ -1,5 +1,5 @@
 import api from './api';
-import { API_ENDPOINTS, API_BASE_URL } from '../config/api';
+import { API_ENDPOINTS } from '../config/api';
 import type { Evidencia } from '../types';
 
 export const evidenciaService = {

@@ -1,4 +1,3 @@
-import React from 'react';
 import { Link } from 'react-router-dom';
 import { MdLock, MdEmojiEvents } from 'react-icons/md';
 import logoDerecho from '../assets/img/logosuperiorderecho.png';

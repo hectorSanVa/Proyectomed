@@ -293,20 +293,20 @@ const Reportes = () => {
       const maxWidth = pageWidth - (margin * 2);
 
       // Colores profesionales mejorados
-      const colorAzulOscuro = [25, 45, 99]; // #192d63 - Azul institucional
-      const colorAzulClaro = [41, 128, 185]; // #2980b9 - Azul profesional
-      const colorGrisOscuro = [44, 62, 80]; // #2c3e50 - Gris profesional
-      const colorGrisClaro = [108, 117, 125]; // #6c757d - Gris suave
-      const colorNegro = [33, 37, 41]; // #212529 - Negro suave
-      const colorBlanco = [255, 255, 255];
-      const colorVerde = [40, 167, 69]; // #28a745 - Verde para estadísticas positivas
+      const colorAzulOscuro = [25, 45, 99] as const; // #192d63 - Azul institucional
+      const colorAzulClaro = [41, 128, 185] as const; // #2980b9 - Azul profesional
+      const colorGrisOscuro = [44, 62, 80] as const; // #2c3e50 - Gris profesional
+      const colorGrisClaro = [108, 117, 125] as const; // #6c757d - Gris suave
+      const colorNegro = [33, 37, 41] as const; // #212529 - Negro suave
+      const colorBlanco = [255, 255, 255] as const;
+      const colorVerde = [40, 167, 69] as const; // #28a745 - Verde para estadísticas positivas
 
       // Header con fondo destacado
-      doc.setFillColor(...colorAzulOscuro);
+      doc.setFillColor(colorAzulOscuro[0], colorAzulOscuro[1], colorAzulOscuro[2]);
       doc.rect(0, 0, pageWidth, 35, 'F');
       
       doc.setFontSize(18);
-      doc.setTextColor(...colorBlanco);
+      doc.setTextColor(colorBlanco[0], colorBlanco[1], colorBlanco[2]);
       doc.setFont('helvetica', 'bold');
       doc.text('REPORTE DEL BUZÓN DE QUEJAS, SUGERENCIAS Y RECONOCIMIENTOS', pageWidth / 2, 15, { align: 'center', maxWidth });
       
@@ -319,30 +319,30 @@ const Reportes = () => {
       // Fecha y filtros con estilo mejorado
       const fecha = new Date().toLocaleString('es-MX');
       doc.setFontSize(12);
-      doc.setTextColor(...colorGrisOscuro);
+      doc.setTextColor(colorGrisOscuro[0], colorGrisOscuro[1], colorGrisOscuro[2]);
       doc.setFont('helvetica', 'bold');
       doc.text('Fecha de generación:', margin, yPosition);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colorNegro);
+      doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
       doc.text(fecha, margin + 50, yPosition);
       yPosition += lineHeight;
 
       if (fechaDesde || fechaHasta) {
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colorGrisOscuro);
+        doc.setTextColor(colorGrisOscuro[0], colorGrisOscuro[1], colorGrisOscuro[2]);
         doc.text('Período:', margin, yPosition);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(...colorNegro);
+        doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
         doc.text(`${fechaDesde || 'Inicio'} - ${fechaHasta || 'Hoy'}`, margin + 30, yPosition);
         yPosition += lineHeight;
       }
 
       if (filterTipo !== 'Todos') {
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colorGrisOscuro);
+        doc.setTextColor(colorGrisOscuro[0], colorGrisOscuro[1], colorGrisOscuro[2]);
         doc.text('Tipo:', margin, yPosition);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(...colorNegro);
+        doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
         doc.text(filterTipo, margin + 20, yPosition);
         yPosition += lineHeight;
       }
@@ -350,35 +350,35 @@ const Reportes = () => {
       yPosition += lineHeight * 0.5;
       
       // Línea decorativa
-      doc.setDrawColor(...colorAzulOscuro);
+      doc.setDrawColor(colorAzulOscuro[0], colorAzulOscuro[1], colorAzulOscuro[2]);
       doc.setLineWidth(0.5);
       doc.line(margin, yPosition, pageWidth - margin, yPosition);
       yPosition += lineHeight * 1.5;
 
       // Estadísticas generales con fondo destacado
-      doc.setFillColor(...colorAzulOscuro);
+      doc.setFillColor(colorAzulOscuro[0], colorAzulOscuro[1], colorAzulOscuro[2]);
       doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colorBlanco);
+      doc.setTextColor(colorBlanco[0], colorBlanco[1], colorBlanco[2]);
       doc.text('ESTADÍSTICAS GENERALES', margin + 2, yPosition);
       yPosition += lineHeight * 2;
 
       doc.setFontSize(12);
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colorNegro);
+      doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
       
       // Total con estilo destacado
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colorAzulOscuro);
+      doc.setTextColor(colorAzulOscuro[0], colorAzulOscuro[1], colorAzulOscuro[2]);
       doc.text(`Total de Comunicaciones:`, margin + 5, yPosition);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colorVerde);
+      doc.setTextColor(colorVerde[0], colorVerde[1], colorVerde[2]);
       doc.text(`${stats.total}`, pageWidth - margin - 20, yPosition, { align: 'right' });
       yPosition += lineHeight * 1.2;
       
       doc.setFont('helvetica', 'normal');
-      doc.setTextColor(...colorNegro);
+      doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
       doc.text(`• Quejas: ${stats.quejas}`, margin + 10, yPosition);
       yPosition += lineHeight;
       doc.text(`• Sugerencias: ${stats.sugerencias}`, margin + 10, yPosition);
@@ -393,11 +393,11 @@ const Reportes = () => {
           yPosition = margin;
         }
         
-        doc.setFillColor(...colorAzulOscuro);
+        doc.setFillColor(colorAzulOscuro[0], colorAzulOscuro[1], colorAzulOscuro[2]);
         doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
         doc.setFontSize(14);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colorBlanco);
+        doc.setTextColor(colorBlanco[0], colorBlanco[1], colorBlanco[2]);
         doc.text('ESTADÍSTICAS POR CATEGORÍA', margin + 2, yPosition);
         yPosition += lineHeight * 1.8;
 
@@ -408,34 +408,34 @@ const Reportes = () => {
         // Headers con estilo mejorado
         doc.setFontSize(11);
         doc.setFont('helvetica', 'bold');
-        doc.setFillColor(...colorAzulClaro);
+        doc.setFillColor(colorAzulClaro[0], colorAzulClaro[1], colorAzulClaro[2]);
         doc.rect(xPos, yPosition - 5, colWidths[0], 8, 'F');
-        doc.setTextColor(...colorBlanco);
+        doc.setTextColor(colorBlanco[0], colorBlanco[1], colorBlanco[2]);
         doc.text('Categoría', xPos + 3, yPosition);
         xPos += colWidths[0];
         
-        doc.setFillColor(...colorAzulClaro);
+        doc.setFillColor(colorAzulClaro[0], colorAzulClaro[1], colorAzulClaro[2]);
         doc.rect(xPos, yPosition - 5, colWidths[1], 8, 'F');
         doc.text('Total', xPos + 3, yPosition);
         xPos += colWidths[1];
         
-        doc.setFillColor(...colorAzulClaro);
+        doc.setFillColor(colorAzulClaro[0], colorAzulClaro[1], colorAzulClaro[2]);
         doc.rect(xPos, yPosition - 5, colWidths[2], 8, 'F');
         doc.text('Quejas', xPos + 3, yPosition);
         xPos += colWidths[2];
         
-        doc.setFillColor(...colorAzulClaro);
+        doc.setFillColor(colorAzulClaro[0], colorAzulClaro[1], colorAzulClaro[2]);
         doc.rect(xPos, yPosition - 5, colWidths[3], 8, 'F');
         doc.text('Sug.', xPos + 3, yPosition);
         xPos += colWidths[3];
         
-        doc.setFillColor(...colorAzulClaro);
+        doc.setFillColor(colorAzulClaro[0], colorAzulClaro[1], colorAzulClaro[2]);
         doc.rect(xPos, yPosition - 5, colWidths[4], 8, 'F');
         doc.text('Recon.', xPos + 3, yPosition);
         
         yPosition += lineHeight * 1.3;
         doc.setFontSize(12);
-        doc.setTextColor(...colorNegro);
+        doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
         doc.setFont('helvetica', 'normal');
 
         // Datos con alternancia de colores
@@ -452,15 +452,15 @@ const Reportes = () => {
           }
 
           xPos = margin;
-          doc.setTextColor(...colorNegro);
+          doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
           doc.text(stat.categoria.substring(0, 25), xPos + 3, yPosition);
           xPos += colWidths[0];
           doc.setFont('helvetica', 'bold');
-          doc.setTextColor(...colorVerde);
+          doc.setTextColor(colorVerde[0], colorVerde[1], colorVerde[2]);
           doc.text(stat.total.toString(), xPos + 3, yPosition);
           xPos += colWidths[1];
           doc.setFont('helvetica', 'normal');
-          doc.setTextColor(...colorNegro);
+          doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
           doc.text(stat.quejas.toString(), xPos + 3, yPosition);
           xPos += colWidths[2];
           doc.text(stat.sugerencias.toString(), xPos + 3, yPosition);
@@ -483,11 +483,11 @@ const Reportes = () => {
         yPosition = margin;
       }
 
-      doc.setFillColor(...colorAzulOscuro);
+      doc.setFillColor(colorAzulOscuro[0], colorAzulOscuro[1], colorAzulOscuro[2]);
       doc.rect(margin, yPosition - 5, pageWidth - (margin * 2), 7, 'F');
       doc.setFontSize(14);
       doc.setFont('helvetica', 'bold');
-      doc.setTextColor(...colorBlanco);
+      doc.setTextColor(colorBlanco[0], colorBlanco[1], colorBlanco[2]);
       doc.text('DETALLE DE COMUNICACIONES', margin + 2, yPosition);
       yPosition += lineHeight * 1.8;
 
@@ -520,62 +520,62 @@ const Reportes = () => {
         // Número y Folio
         doc.setFontSize(12);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colorAzulOscuro);
+        doc.setTextColor(colorAzulOscuro[0], colorAzulOscuro[1], colorAzulOscuro[2]);
         doc.text(`${index + 1}.`, margin + 3, yPosition);
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colorGrisOscuro);
+        doc.setTextColor(colorGrisOscuro[0], colorGrisOscuro[1], colorGrisOscuro[2]);
         doc.text('Folio:', margin + 12, yPosition);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(...colorNegro);
+        doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
         doc.text(com.folio || 'N/A', margin + 28, yPosition);
         yPosition += lineHeight * 1.2;
 
         // Tipo
         doc.setFont('helvetica', 'bold');
         doc.setFontSize(11);
-        doc.setTextColor(...colorGrisOscuro);
+        doc.setTextColor(colorGrisOscuro[0], colorGrisOscuro[1], colorGrisOscuro[2]);
         doc.text('Tipo:', margin + 3, yPosition);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(...colorNegro);
+        doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
         doc.text(com.tipo || 'N/A', margin + 20, yPosition);
         yPosition += lineHeight;
 
         // Categoría
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colorGrisOscuro);
+        doc.setTextColor(colorGrisOscuro[0], colorGrisOscuro[1], colorGrisOscuro[2]);
         doc.text('Categoría:', margin + 3, yPosition);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(...colorNegro);
+        doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
         doc.text(categoria?.nombre_categoria || 'N/A', margin + 35, yPosition);
         yPosition += lineHeight;
 
         // Estado
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colorGrisOscuro);
+        doc.setTextColor(colorGrisOscuro[0], colorGrisOscuro[1], colorGrisOscuro[2]);
         doc.text('Estado:', margin + 3, yPosition);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(...colorNegro);
+        doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
         doc.text(com.estado?.nombre_estado || 'Pendiente', margin + 28, yPosition);
         yPosition += lineHeight;
 
         // Fecha
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colorGrisOscuro);
+        doc.setTextColor(colorGrisOscuro[0], colorGrisOscuro[1], colorGrisOscuro[2]);
         doc.text('Fecha:', margin + 3, yPosition);
         doc.setFont('helvetica', 'normal');
-        doc.setTextColor(...colorNegro);
+        doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
         doc.text(fechaFormateada, margin + 25, yPosition);
         yPosition += lineHeight;
         
         // Descripción
         doc.setFont('helvetica', 'bold');
-        doc.setTextColor(...colorGrisOscuro);
+        doc.setTextColor(colorGrisOscuro[0], colorGrisOscuro[1], colorGrisOscuro[2]);
         doc.text('Descripción:', margin + 3, yPosition);
         yPosition += lineHeight * 0.8;
         
         doc.setFont('helvetica', 'normal');
         doc.setFontSize(10);
-        doc.setTextColor(...colorNegro);
+        doc.setTextColor(colorNegro[0], colorNegro[1], colorNegro[2]);
         descripcionLines.forEach((line: string) => {
           doc.text(line, margin + 8, yPosition);
           yPosition += lineHeight * 0.9;
@@ -604,12 +604,12 @@ const Reportes = () => {
         doc.setPage(i);
         
         // Línea superior del footer
-        doc.setDrawColor(...colorAzulOscuro);
+        doc.setDrawColor(colorAzulOscuro[0], colorAzulOscuro[1], colorAzulOscuro[2]);
         doc.setLineWidth(0.5);
         doc.line(margin, pageHeight - 15, pageWidth - margin, pageHeight - 15);
         
         doc.setFontSize(10);
-        doc.setTextColor(...colorGrisOscuro);
+        doc.setTextColor(colorGrisOscuro[0], colorGrisOscuro[1], colorGrisOscuro[2]);
         doc.setFont('helvetica', 'normal');
         doc.text(
           `Página ${i} de ${totalPages}`,
