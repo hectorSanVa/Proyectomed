@@ -62,7 +62,7 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
   // Evidencia
   const [archivos, setArchivos] = useState<File[]>([]);
   const fileInputRef = useRef<HTMLInputElement>(null);
-  const [generandoPDF, setGenerandoPDF] = useState(false);
+  const [, setGenerandoPDF] = useState(false);
 
   useEffect(() => {
     // Si está autenticado, pre-llenar el correo
