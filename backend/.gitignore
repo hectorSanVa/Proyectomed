@@ -40,3 +40,6 @@ Thumbs.db
 # Temporary files
 *.tmp
 *.temp
+
+# Archivos de documentación y planificación local
+backend_checklist.md

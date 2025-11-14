@@ -1,6 +1,6 @@
-import pool from '../config/database';
-import fs from 'fs';
-import path from 'path';
+import pool from "../config/database";
+import fs from "fs";
+import path from "path";
 
 /**
  * Ejecuta las migraciones SQL necesarias para crear las tablas
@@ -8,15 +8,20 @@ import path from 'path';
  */
 export async function runMigrations() {
   try {
-    console.log('🔄 Verificando migraciones de base de datos...');
+    console.log("🔄 Verificando migraciones de base de datos...");
 
     // Verificar conexión a la base de datos primero
     try {
-      await pool.query('SELECT 1');
-      console.log('✅ Conexión a la base de datos verificada');
+      await pool.query("SELECT 1");
+      console.log("✅ Conexión a la base de datos verificada");
     } catch (dbError: any) {
-      console.error('❌ Error al conectar a la base de datos:', dbError.message);
-      throw new Error(`No se pudo conectar a la base de datos: ${dbError.message}`);
+      console.error(
+        "❌ Error al conectar a la base de datos:",
+        dbError.message
+      );
+      throw new Error(
+        `No se pudo conectar a la base de datos: ${dbError.message}`
+      );
     }
 
     // Verificar si las tablas principales ya existen
@@ -28,11 +33,11 @@ export async function runMigrations() {
     `);
 
     if (checkTables.rows.length >= 4) {
-      console.log('✅ Las tablas ya existen, saltando migraciones');
+      console.log("✅ Las tablas ya existen, saltando migraciones");
       return;
     }
 
-    console.log('📦 Ejecutando migraciones...');
+    console.log("📦 Ejecutando migraciones...");
 
     // Crear tablas
     await pool.query(`
@@ -173,6 +178,8 @@ export async function runMigrations() {
       );
     `);
 
+    // (Línea ~200 - Después de CREATE TABLE IF NOT EXISTS seguimiento)
+
     await pool.query(`
       -- Tabla de seguimiento
       CREATE TABLE IF NOT EXISTS seguimiento (
@@ -187,6 +194,18 @@ export async function runMigrations() {
         prioridad VARCHAR(20) CHECK (prioridad IN ('Baja','Media','Alta','Urgente')) DEFAULT 'Media'
       );
     `);
+
+    // --- AÑADIR ESTE BLOQUE ---
+    console.log("🔄 Modificando tabla seguimiento para asignaciones...");
+    await pool.query(`
+      ALTER TABLE seguimiento
+      ADD COLUMN IF NOT EXISTS id_admin_asignado INT REFERENCES usuarios_admin(id_admin) ON DELETE SET NULL;
+    `);
+
+    await pool.query(`
+      CREATE INDEX IF NOT EXISTS idx_seguimiento_admin_asignado ON seguimiento(id_admin_asignado);
+    `);
+    // --- FIN DEL BLOQUE A AÑADIR ---
 
     await pool.query(`
       -- Tabla de historial de estados
@@ -307,6 +326,36 @@ export async function runMigrations() {
       WHERE NOT EXISTS (SELECT 1 FROM usuarios_admin WHERE username = 'secretario');
     `);
 
+    console.log("🔄 Actualizando roles existentes para compatibilidad...");
+    await pool.query(`
+      UPDATE usuarios_admin 
+      SET rol = 'admin' 
+      WHERE rol = 'secretario';
+    `);
+
+    console.log("🔒 Añadiendo restricción de roles a usuarios_admin...");
+    try {
+      // Intentar añadir la restricción
+      await pool.query(`
+        ALTER TABLE usuarios_admin 
+        ADD CONSTRAINT chk_roles CHECK (rol IN ('admin', 'monitor', 'moderador'));
+      `);
+      console.log("✅ Restricción de roles añadida.");
+    } catch (error: any) {
+      // Si la restricción ya existe (error 23514 en psql es unique_violation, 42710 es duplicate_object)
+      // O si el nombre ya existe.
+      if (error.code === "42710" || error.message.includes("ya existe")) {
+        console.log("ℹ️ La restricción de roles ya existía.");
+      } else {
+        // Si es otro error (como que los datos violan el CHECK), lanzarlo
+        console.error(
+          "❌ Error al añadir restricción de roles:",
+          error.message
+        );
+        throw error;
+      }
+    }
+
     // Tabla de configuración del sistema
     await pool.query(`
       CREATE TABLE IF NOT EXISTS configuracion (
@@ -338,11 +387,12 @@ export async function runMigrations() {
       WHERE NOT EXISTS (SELECT 1 FROM configuracion WHERE clave = 'notificaciones_email');
     `);
 
-    console.log('✅ Migraciones ejecutadas correctamente');
+    console.log("✅ Migraciones ejecutadas correctamente");
   } catch (error: any) {
-    console.error('❌ Error al ejecutar migraciones:', error.message);
+    console.error("❌ Error al ejecutar migraciones:", error.message);
     // No lanzamos el error para que el servidor pueda iniciar aunque haya un problema con las migraciones
-    console.log('⚠️ El servidor continuará iniciando, pero algunas tablas pueden no existir');
+    console.log(
+      "⚠️ El servidor continuará iniciando, pero algunas tablas pueden no existir"
+    );
   }
 }
-
