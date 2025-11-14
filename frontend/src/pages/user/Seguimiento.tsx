@@ -369,20 +369,70 @@ const SeguimientoPage = () => {
                   </div>
                 </div>
                 
-                {/* Respuesta/Comentarios - siempre visible en el modal */}
+                {/* Respuesta/Comentarios del Administrador - siempre visible en el modal */}
                 <div className="modal-detail-row full-width">
-                  <strong>Respuesta/Comentarios:</strong>
-                  {selectedComunicacion.seguimiento?.notas && selectedComunicacion.seguimiento.notas.trim().length > 0 ? (
-                    <div className="modal-respuesta">
-                      {selectedComunicacion.seguimiento.notas}
-                      {selectedComunicacion.seguimiento.fecha_resolucion && (
-                        <div className="modal-respuesta-fecha">
-                          Resuelto el: {formatFecha(selectedComunicacion.seguimiento.fecha_resolucion)}
-                        </div>
-                      )}
-                    </div>
-                  ) : (() => {
+                  <strong>Respuesta/Comentarios del Administrador:</strong>
+                  {(() => {
                     const estadoNombre = selectedComunicacion.estado?.nombre_estado || 'Pendiente';
+                    const notas = selectedComunicacion.seguimiento?.notas?.trim() || '';
+                    
+                    // Si hay notas y el estado es Atendida o Cerrada, mostrar las notas completas
+                    if (notas && (estadoNombre === 'Atendida' || estadoNombre === 'Cerrada')) {
+                      // Filtrar información técnica automática si existe
+                      let notasParaUsuario = notas;
+                      
+                      // Remover notas técnicas automáticas si están al inicio
+                      const patronesTecnicos = [
+                        /^Comunicación recibida\.\s*/i,
+                        /^Prioridad\s+\w+\s+asignada\s+automáticamente/i,
+                        /^Propuesta de mejora:/i,
+                      ];
+                      
+                      // Si las notas empiezan con información técnica, intentar extraer solo los comentarios del admin
+                      // Buscar si hay un salto de línea o punto que separe la información técnica de los comentarios
+                      const lineas = notasParaUsuario.split('\n');
+                      const lineasFiltradas = lineas.filter(linea => {
+                        // Filtrar líneas que son claramente técnicas
+                        return !patronesTecnicos.some(patron => patron.test(linea.trim()));
+                      });
+                      
+                      // Si después de filtrar quedan líneas, usarlas; si no, usar las originales
+                      notasParaUsuario = lineasFiltradas.length > 0 
+                        ? lineasFiltradas.join('\n').trim()
+                        : notasParaUsuario;
+                      
+                      // Si después de filtrar está vacío, usar las notas originales
+                      if (!notasParaUsuario.trim()) {
+                        notasParaUsuario = notas;
+                      }
+                      
+                      return (
+                        <div className="modal-respuesta">
+                          <div className="respuesta-content">
+                            {notasParaUsuario}
+                          </div>
+                          {selectedComunicacion.seguimiento.fecha_resolucion && (
+                            <div className="modal-respuesta-fecha">
+                              Resuelto el: {formatFecha(selectedComunicacion.seguimiento.fecha_resolucion)}
+                            </div>
+                          )}
+                        </div>
+                      );
+                    }
+                    
+                    // Si hay notas pero el estado no es Atendida/Cerrada, mostrar las notas de todos modos
+                    // (puede ser que el admin haya agregado comentarios antes de cambiar el estado)
+                    if (notas && notas.length > 0) {
+                      return (
+                        <div className="modal-respuesta">
+                          <div className="respuesta-content">
+                            {notas}
+                          </div>
+                        </div>
+                      );
+                    }
+                    
+                    // Si no hay notas
                     if (estadoNombre === 'Atendida' || estadoNombre === 'Cerrada') {
                       return (
                         <div className="modal-sin-respuesta">

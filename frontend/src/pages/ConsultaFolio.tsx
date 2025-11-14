@@ -692,14 +692,41 @@ const ConsultaFolio = () => {
                   </div>
                 </div>
 
-                {/* Mostrar notas/comentarios si el estado es Atendida o Cerrada y hay notas */}
-                {estado && (estado.nombre_estado === 'Atendida' || estado.nombre_estado === 'Cerrada') && 
-                 seguimiento?.notas && seguimiento.notas.trim().length > 0 && (
+                {/* Mostrar notas/comentarios del administrador - siempre mostrar si hay notas */}
+                {seguimiento?.notas && seguimiento.notas.trim().length > 0 ? (
                   <div className="resultado-row full-width">
-                    <span className="resultado-label">Respuesta/Comentarios:</span>
+                    <span className="resultado-label">Respuesta/Comentarios del Administrador:</span>
                     <div className="resultado-respuesta">
                       <div className="respuesta-content">
-                        {seguimiento.notas}
+                        {(() => {
+                          const estadoNombre = estado?.nombre_estado || 'Pendiente';
+                          let notasParaUsuario = seguimiento.notas.trim();
+                          
+                          // Si el estado es Atendida o Cerrada, filtrar información técnica
+                          if (estadoNombre === 'Atendida' || estadoNombre === 'Cerrada') {
+                            // Remover notas técnicas automáticas si están al inicio
+                            const patronesTecnicos = [
+                              /^Comunicación recibida\.\s*/i,
+                              /^Prioridad\s+\w+\s+asignada\s+automáticamente/i,
+                              /^Propuesta de mejora:/i,
+                            ];
+                            
+                            const lineas = notasParaUsuario.split('\n');
+                            const lineasFiltradas = lineas.filter(linea => {
+                              return !patronesTecnicos.some(patron => patron.test(linea.trim()));
+                            });
+                            
+                            notasParaUsuario = lineasFiltradas.length > 0 
+                              ? lineasFiltradas.join('\n').trim()
+                              : notasParaUsuario;
+                            
+                            if (!notasParaUsuario.trim()) {
+                              notasParaUsuario = seguimiento.notas.trim();
+                            }
+                          }
+                          
+                          return notasParaUsuario;
+                        })()}
                       </div>
                       {seguimiento.fecha_resolucion && (
                         <div className="respuesta-fecha">
@@ -708,17 +735,16 @@ const ConsultaFolio = () => {
                       )}
                     </div>
                   </div>
-                )}
-
-                {/* Mostrar mensaje si está atendida/cerrada pero sin notas */}
-                {estado && (estado.nombre_estado === 'Atendida' || estado.nombre_estado === 'Cerrada') && 
-                 (!seguimiento?.notas || !seguimiento.notas.trim()) && (
-                  <div className="resultado-row full-width">
-                    <span className="resultado-label">Respuesta/Comentarios:</span>
-                    <div className="resultado-sin-respuesta">
-                      Sin comentarios disponibles aún.
+                ) : (
+                  // Mostrar mensaje si no hay notas
+                  estado && (estado.nombre_estado === 'Atendida' || estado.nombre_estado === 'Cerrada') && (
+                    <div className="resultado-row full-width">
+                      <span className="resultado-label">Respuesta/Comentarios del Administrador:</span>
+                      <div className="resultado-sin-respuesta">
+                        Sin comentarios disponibles aún.
+                      </div>
                     </div>
-                  </div>
+                  )
                 )}
               </div>
 
