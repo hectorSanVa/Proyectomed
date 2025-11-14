@@ -18,15 +18,23 @@ export const usuarioAuthService = {
       }
 
       // Llamar al backend para crear o obtener usuario
+      const loginUrl = `${API_BASE_URL}/usuarios/login`;
       console.log('📡 Enviando solicitud al servidor...');
-      console.log('📡 URL:', `${API_BASE_URL}/usuarios/login`);
+      console.log('📡 URL completa:', loginUrl);
       console.log('📡 Correo:', correo);
+      console.log('📡 API_BASE_URL:', API_BASE_URL);
       
       try {
+        // Verificar primero que el servidor esté disponible (opcional)
+        // Si el servidor no responde, el timeout de 30 segundos lo manejará
+        
         // Agregar timeout específico para login (30 segundos)
+        const startTime = Date.now();
         const response = await api.post('/usuarios/login', { correo }, {
           timeout: 30000,
         });
+        const endTime = Date.now();
+        console.log(`⏱️ Tiempo de respuesta: ${endTime - startTime}ms`);
         
         console.log('✅ Respuesta del servidor recibida:', response.status);
         console.log('✅ Datos recibidos:', response.data);

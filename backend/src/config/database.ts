@@ -30,9 +30,28 @@ const getDatabaseConfig = () => {
 
 const pool = new Pool(getDatabaseConfig());
 
+// Configurar pool para manejar conexiones mejor
+pool.on('error', (err: Error) => {
+  console.error('❌ Error inesperado en el pool de PostgreSQL:', err);
+});
+
+pool.on('connect', () => {
+  console.log('✅ Nueva conexión establecida con PostgreSQL');
+});
+
 // Opcional: verificar conexión al iniciar
 pool.connect()
-  .then(() => console.log("✅ Conexión a PostgreSQL exitosa"))
-  .catch((err: Error) => console.error("❌ Error al conectar a PostgreSQL:", err));
+  .then((client) => {
+    console.log("✅ Conexión a PostgreSQL exitosa");
+    client.release(); // Liberar la conexión
+  })
+  .catch((err: Error) => {
+    console.error("❌ Error al conectar a PostgreSQL:", err);
+    console.error("❌ Detalles:", {
+      message: err.message,
+      code: (err as any).code,
+      stack: err.stack,
+    });
+  });
 
 export default pool;
