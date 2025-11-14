@@ -108,20 +108,85 @@
   font-size: 1rem;
 }
 
+/* Tablets (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
+  .header-content {
+    padding: 0 1.25rem;
+  }
+
+  .header-logo-left {
+    height: 80px;
+    max-width: 220px;
+  }
+
+  .header-title-text {
+    font-size: 1rem;
+  }
+}
+
+/* Móviles (hasta 768px) */
 @media (max-width: 768px) {
   .header-content {
     flex-direction: column;
     gap: 0.5rem;
     text-align: center;
+    padding: 0.75rem 1rem;
   }
 
   .header-logo-left {
-    height: 70px;
-    max-width: 200px;
+    height: 60px;
+    max-width: 180px;
   }
 
-  .header-title h1 {
-    font-size: 1rem;
+  .header-title-text {
+    font-size: 0.9rem;
+    line-height: 1.3;
+  }
+
+  .header-subtitle {
+    font-size: 0.8rem;
+  }
+
+  .header-motto {
+    font-size: 0.75rem;
+  }
+
+  .admin-button {
+    padding: 0.6rem 1rem;
+    font-size: 0.85rem;
+    min-height: 44px;
+  }
+}
+
+/* Pantallas muy pequeñas (< 480px) */
+@media (max-width: 480px) {
+  .header-content {
+    padding: 0.5rem 0.75rem;
+    gap: 0.4rem;
+  }
+
+  .header-logo-left {
+    height: 50px;
+    max-width: 150px;
+  }
+
+  .header-title-text {
+    font-size: 0.8rem;
+    line-height: 1.2;
+  }
+
+  .header-subtitle {
+    font-size: 0.75rem;
+  }
+
+  .header-motto {
+    font-size: 0.7rem;
+  }
+
+  .admin-button {
+    padding: 0.5rem 0.75rem;
+    font-size: 0.8rem;
+    min-height: 40px;
   }
 }
 

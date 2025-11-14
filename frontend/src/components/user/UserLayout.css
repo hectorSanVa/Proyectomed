@@ -2,6 +2,29 @@
   display: flex;
   min-height: 100vh;
   background-color: var(--unach-gris-claro);
+  position: relative;
+}
+
+/* Overlay para móviles */
+.sidebar-overlay {
+  display: none;
+  position: fixed;
+  top: 0;
+  left: 0;
+  right: 0;
+  bottom: 0;
+  background-color: rgba(0, 0, 0, 0.5);
+  z-index: 999;
+  animation: fadeIn 0.3s ease;
+}
+
+@keyframes fadeIn {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
 }
 
 .user-content {
@@ -10,6 +33,8 @@
   display: flex;
   flex-direction: column;
   min-height: 100vh;
+  width: calc(100% - 250px);
+  transition: margin-left 0.3s ease, width 0.3s ease;
 }
 
 .user-main {
@@ -17,13 +42,81 @@
   padding: 2rem;
 }
 
-@media (max-width: 768px) {
+/* Botón hamburguesa para móviles */
+.mobile-menu-btn {
+  display: none;
+  position: fixed;
+  top: 1rem;
+  left: 1rem;
+  z-index: 998;
+  background-color: var(--unach-azul-oscuro);
+  color: white;
+  border: none;
+  border-radius: 8px;
+  width: 48px;
+  height: 48px;
+  font-size: 1.5rem;
+  cursor: pointer;
+  align-items: center;
+  justify-content: center;
+  box-shadow: 0 2px 8px rgba(0, 0, 0, 0.2);
+  transition: background-color 0.3s ease, transform 0.2s ease;
+}
+
+.mobile-menu-btn:hover {
+  background-color: #152047;
+  transform: scale(1.05);
+}
+
+.mobile-menu-btn:active {
+  transform: scale(0.95);
+}
+
+/* Tablets (768px - 1024px) */
+@media (max-width: 1024px) and (min-width: 769px) {
   .user-content {
-    margin-left: 200px;
+    margin-left: 220px;
+    width: calc(100% - 220px);
+  }
+
+  .user-main {
+    padding: 1.5rem;
+  }
+}
+
+/* Móviles (hasta 768px) */
+@media (max-width: 768px) {
+  .sidebar-overlay {
+    display: block;
+  }
+
+  .user-content {
+    margin-left: 0;
+    width: 100%;
+  }
+
+  .mobile-menu-btn {
+    display: flex;
   }
 
   .user-main {
     padding: 1rem;
+    margin-top: 0;
+  }
+}
+
+/* Pantallas muy pequeñas (< 480px) */
+@media (max-width: 480px) {
+  .mobile-menu-btn {
+    top: 0.75rem;
+    left: 0.75rem;
+    width: 44px;
+    height: 44px;
+    font-size: 1.3rem;
+  }
+
+  .user-main {
+    padding: 0.75rem;
   }
 }
 
