@@ -819,31 +819,43 @@
   text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
 }
 
-.badge-alta {
-  background: linear-gradient(135deg, #e74c3c 0%, #c0392b 100%);
-  color: var(--unach-blanco);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.badge-media {
-  background: linear-gradient(135deg, #f39c12 0%, #e67e22 100%);
-  color: #fff;
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
-}
-
-.badge-baja {
-  background: linear-gradient(135deg, #27ae60 0%, #229954 100%);
-  color: var(--unach-blanco);
-  text-shadow: 0 1px 2px rgba(0, 0, 0, 0.1);
+/* Badges de Prioridad - Diseño Profesional y Sutil */
+.badge-prioridad {
+  padding: 0.35rem 0.85rem;
+  border-radius: 6px;
+  font-size: 0.75rem;
+  font-weight: 600;
+  display: inline-flex;
+  align-items: center;
+  justify-content: center;
+  letter-spacing: 0.5px;
+  text-transform: uppercase;
+  border: 1px solid transparent;
+  transition: all 0.2s ease;
 }
 
 .badge-urgente {
-  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
-  color: #ffffff;
-  font-weight: 700;
-  text-shadow: 0 1px 3px rgba(0, 0, 0, 0.3);
-  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.4);
-  border: 1px solid rgba(255, 255, 255, 0.2);
+  background-color: #fff5f5;
+  color: #c92a2a;
+  border-color: #ffc9c9;
+}
+
+.badge-alta {
+  background-color: #fff4e6;
+  color: #d9480f;
+  border-color: #ffd8a8;
+}
+
+.badge-media {
+  background-color: #fff9db;
+  color: #f59f00;
+  border-color: #ffec99;
+}
+
+.badge-baja {
+  background-color: #f0f9ff;
+  color: #1971c2;
+  border-color: #a5d8ff;
 }
 
 .action-buttons {
@@ -977,29 +989,35 @@
 
 .modal-content {
   background: var(--unach-blanco);
-  border-radius: 12px;
-  max-width: 900px;
+  border-radius: 16px;
+  max-width: 950px;
   width: 100%;
   max-height: 90vh;
   overflow-y: auto;
-  box-shadow: 0 10px 40px rgba(0, 0, 0, 0.2);
-  border: 1px solid rgba(212, 176, 18, 0.1);
+  box-shadow: 0 20px 60px rgba(0, 0, 0, 0.15), 0 0 1px rgba(0, 0, 0, 0.1);
+  border: 1px solid rgba(25, 45, 99, 0.08);
 }
 
 .modal-header {
   display: flex;
   justify-content: space-between;
   align-items: center;
-  padding: 1.75rem 2rem;
-  border-bottom: 2px solid #f0f0f0;
-  background: linear-gradient(135deg, #fafbfc 0%, #ffffff 100%);
-  border-radius: 12px 12px 0 0;
+  padding: 2rem 2.5rem;
+  border-bottom: 1px solid #e5e7eb;
+  background: #ffffff;
+  border-radius: 16px 16px 0 0;
+  position: sticky;
+  top: 0;
+  z-index: 10;
+  backdrop-filter: blur(10px);
 }
 
 .modal-header h2 {
   color: var(--unach-azul-oscuro);
   margin: 0;
   font-size: 1.5rem;
+  font-weight: 700;
+  letter-spacing: -0.5px;
 }
 
 .modal-close {
@@ -1019,41 +1037,81 @@
 }
 
 .modal-body {
-  padding: 2rem;
+  padding: 2.5rem;
+  background: #fafbfc;
 }
 
 .modal-section {
-  margin-bottom: 2rem;
+  margin-bottom: 2.5rem;
+  background: #ffffff;
+  padding: 1.75rem;
+  border-radius: 12px;
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 3px rgba(0, 0, 0, 0.05);
+}
+
+.modal-section:last-child {
+  margin-bottom: 0;
 }
 
 .modal-section h3 {
   color: var(--unach-azul-oscuro);
-  margin-bottom: 1rem;
-  font-size: 1.2rem;
+  margin: 0 0 1.5rem 0;
+  font-size: 1.15rem;
+  font-weight: 700;
+  letter-spacing: -0.3px;
+  padding-bottom: 0.75rem;
+  border-bottom: 2px solid #f3f4f6;
 }
 
 .modal-info-row {
-  display: flex;
-  gap: 1rem;
-  margin-bottom: 1rem;
-  padding-bottom: 1rem;
-  border-bottom: 1px solid #f0f0f0;
+  display: grid;
+  grid-template-columns: 180px 1fr;
+  gap: 1.5rem;
+  margin-bottom: 1.25rem;
+  padding-bottom: 1.25rem;
+  border-bottom: 1px solid #f3f4f6;
+  align-items: start;
 }
 
 .modal-info-row:last-child {
   border-bottom: none;
+  margin-bottom: 0;
+  padding-bottom: 0;
 }
 
 .modal-info-row strong {
-  min-width: 150px;
-  color: #333;
+  color: #374151;
+  font-weight: 600;
+  font-size: 0.9rem;
+  letter-spacing: 0.2px;
+  line-height: 1.6;
 }
 
 .modal-info-row span,
 .modal-info-row p {
-  flex: 1;
-  color: #666;
+  color: #1f2937;
   margin: 0;
+  font-size: 0.95rem;
+  line-height: 1.6;
+  word-break: break-word;
+}
+
+.modal-info-row p {
+  color: #4b5563;
+  line-height: 1.7;
+}
+
+/* Estilo especial para badges dentro del modal */
+.modal-info-row .badge {
+  margin: 0;
+  box-shadow: none;
+  border: 1px solid;
+}
+
+.modal-info-row .badge:hover {
+  transform: none;
+  box-shadow: none;
 }
 
 .modal-actions {
@@ -1217,6 +1275,7 @@
   .modal-content {
     max-width: 95%;
     margin: 1rem;
+    border-radius: 12px;
   }
 
   .modal-body {
@@ -1224,7 +1283,22 @@
   }
 
   .modal-header {
-    padding: 1.25rem 1.5rem;
+    padding: 1.5rem;
+    flex-wrap: wrap;
+    gap: 1rem;
+  }
+
+  .modal-section {
+    padding: 1.25rem;
+  }
+
+  .modal-info-row {
+    grid-template-columns: 1fr;
+    gap: 0.5rem;
+  }
+
+  .modal-info-row strong {
+    margin-bottom: 0.25rem;
   }
 }
 
@@ -1235,10 +1309,18 @@
 }
 
 .historial-item {
-  background: #f8f9fa;
-  padding: 1rem;
-  border-radius: 6px;
-  border-left: 4px solid var(--unach-dorado);
+  background: #ffffff;
+  padding: 1.25rem;
+  border-radius: 8px;
+  border-left: 3px solid var(--unach-dorado);
+  border: 1px solid #e5e7eb;
+  box-shadow: 0 1px 2px rgba(0, 0, 0, 0.05);
+  transition: all 0.2s ease;
+}
+
+.historial-item:hover {
+  box-shadow: 0 2px 4px rgba(0, 0, 0, 0.08);
+  border-left-color: var(--unach-azul-oscuro);
 }
 
 .historial-header {
@@ -1802,30 +1884,40 @@
   box-shadow: 0 2px 6px rgba(0, 0, 0, 0.2);
 }
 
+/* Botón de descargar PDF profesional */
 .btn-download-pdf {
-  padding: 0.5rem 1rem;
-  background: #dc3545;
+  padding: 0.65rem 1.25rem;
+  background: linear-gradient(135deg, #dc3545 0%, #c82333 100%);
   color: white;
   border: none;
-  border-radius: 4px;
-  font-size: 0.85rem;
+  border-radius: 8px;
+  font-size: 0.875rem;
   font-weight: 600;
   cursor: pointer;
-  display: flex;
+  display: inline-flex;
   align-items: center;
   gap: 0.5rem;
   transition: all 0.3s ease;
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
+  letter-spacing: 0.3px;
 }
 
 .btn-download-pdf:hover:not(:disabled) {
-  background: #c82333;
+  background: linear-gradient(135deg, #c82333 0%, #bd2130 100%);
   transform: translateY(-2px);
-  box-shadow: 0 2px 6px rgba(220, 53, 69, 0.3);
+  box-shadow: 0 4px 8px rgba(220, 53, 69, 0.3);
+}
+
+.btn-download-pdf:active:not(:disabled) {
+  transform: translateY(0);
+  box-shadow: 0 2px 4px rgba(220, 53, 69, 0.2);
 }
 
 .btn-download-pdf:disabled {
   opacity: 0.6;
   cursor: not-allowed;
+  background: #95a5a6;
+  box-shadow: none;
 }
 
 @media (max-width: 768px) {
