@@ -1,4 +1,5 @@
 import api from './api';
+import { API_BASE_URL } from '../config/api';
 import type { UsuarioSession } from '../types';
 
 export interface UsuarioLoginResponse {
