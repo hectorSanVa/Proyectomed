@@ -252,11 +252,19 @@ const GestionReconocimientos = () => {
         setHistorialEstados(historial);
         
         // Filtrar evidencias: solo mostrar las subidas por el usuario, NO los PDFs generados
-        // Los PDFs generados tienen un patrón específico en el nombre: "formato_D0009_11_FMHT_25_202..."
+        // Los PDFs generados tienen patrones específicos en el nombre:
+        // - "formato_" (nuevos)
+        // - Patrones con fecha como "25_2025-11-14.pdf" (antiguos)
         const evidenciasUsuario = evidenciasData.filter((ev: Evidencia) => {
           const nombreArchivo = ev.nombre_archivo?.toLowerCase() || '';
-          // Excluir PDFs generados (tienen "formato_" en el nombre)
-          return !nombreArchivo.startsWith('formato_');
+          // Excluir PDFs generados:
+          // 1. Los que empiezan con "formato_"
+          // 2. Los que tienen patrón de fecha al final (ej: "25_2025-11-14.pdf")
+          // 3. Los que son solo números seguidos de fecha (ej: "25_2025-11-14.pdf")
+          const esPDFGenerado = nombreArchivo.startsWith('formato_') || 
+                                /^\d+_\d{4}-\d{2}-\d{2}\.pdf$/.test(nombreArchivo) ||
+                                /^formato_.*\.pdf$/.test(nombreArchivo);
+          return !esPDFGenerado;
         });
         setEvidencias(evidenciasUsuario);
 
@@ -683,7 +691,8 @@ const GestionReconocimientos = () => {
       const fileName = `formato_${selectedComunicacion.folio || selectedComunicacion.id_comunicacion}_${new Date().toISOString().split('T')[0]}.pdf`;
       const pdfBlob = doc.output('blob');
       
-      // Descargar PDF localmente
+      // Descargar PDF localmente SOLO (NO guardar como evidencia)
+      // Los PDFs generados NO deben aparecer en la lista de evidencias del usuario
       const url = URL.createObjectURL(pdfBlob);
       const link = document.createElement('a');
       link.href = url;
@@ -693,18 +702,7 @@ const GestionReconocimientos = () => {
       document.body.removeChild(link);
       URL.revokeObjectURL(url);
 
-      // Guardar PDF en el servidor (si hay id_comunicacion)
-      if (selectedComunicacion.id_comunicacion) {
-        try {
-          await evidenciaService.uploadPDF(selectedComunicacion.id_comunicacion, pdfBlob, fileName);
-          showToast('PDF descargado y guardado en el servidor', 'success');
-        } catch (uploadError) {
-          console.warn('PDF descargado localmente, pero no se pudo guardar en el servidor:', uploadError);
-          showToast('PDF descargado. No se pudo guardar en el servidor', 'warning');
-        }
-      } else {
-        showToast('PDF descargado exitosamente', 'success');
-      }
+      showToast('PDF descargado exitosamente', 'success');
     } catch (error) {
       console.error('Error al generar PDF:', error);
       showToast('Error al generar el PDF del formato', 'error');
