@@ -24,6 +24,10 @@ const ConsultaFolio = () => {
   const [seguimiento, setSeguimiento] = useState<Seguimiento | null>(null);
   const [loading, setLoading] = useState(false);
   const [error, setError] = useState<string | null>(null);
+  const [generandoPDF, setGenerandoPDF] = useState(false);
+  const [categoriaComunicacion, setCategoriaComunicacion] = useState<Categoria | null>(null);
+  const [evidencias, setEvidencias] = useState<any[]>([]);
+  const [usuarioComunicacion, setUsuarioComunicacion] = useState<Usuario | null>(null);
 
   // Buscar automáticamente si viene el folio en la URL
   useEffect(() => {
