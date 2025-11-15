@@ -6,7 +6,8 @@
     "dev": "nodemon",
     "build": "tsc",
     "start": "node dist/app.js",
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "echo \"Error: no test specified\" && exit 1",
+    "manage-admins": "ts-node scripts/gestionarAdmins.ts"
   },
   "keywords": [],
   "author": "",
