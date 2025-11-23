@@ -50,3 +50,7 @@ backend/uploads/
 # package-lock.json
 # yarn.lock
 
+#files temp
+AGENTS.md
+docs/
+
