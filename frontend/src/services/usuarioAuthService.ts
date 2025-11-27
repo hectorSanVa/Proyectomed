@@ -40,16 +40,22 @@ export const usuarioAuthService = {
         console.log('✅ Respuesta del servidor recibida:', response.status);
         console.log('✅ Datos recibidos:', response.data);
         
-        if (response.data.success) {
-          const session = response.data.session;
+        if (response.data.success && response.data.token && response.data.user) {
+          const { token, user } = response.data;
           
-          // Guardar sesión en localStorage para persistencia local
-          localStorage.setItem('usuarioSession', JSON.stringify(session));
-          console.log('✅ Sesión guardada en servidor y localStorage. Usuario ID:', session.id_usuario);
+          // Guardar token JWT en sessionStorage (se limpia al cerrar el navegador)
+          // NO usar localStorage para mantener profesionalismo
+          sessionStorage.setItem('usuario_token', token);
+          sessionStorage.setItem('usuario_user', JSON.stringify(user));
+          console.log('✅ Token JWT guardado en sessionStorage. Usuario ID:', user.id_usuario);
           
           return {
             success: true,
-            session,
+            session: {
+              id_usuario: user.id_usuario,
+              correo: user.correo,
+              nombre: user.nombre,
+            },
             message: response.data.message || 'Sesión iniciada correctamente',
           };
         } else {
@@ -82,21 +88,9 @@ export const usuarioAuthService = {
             throw new Error('Por favor ingresa tu correo institucional de la UNACH (@unach.mx o @unach.edu.mx)');
           }
           
-          // Método temporal: crear sesión local hasta que Render despliegue
-          const session: UsuarioSession = {
-            id_usuario: null, // Temporal hasta que Render despliegue
-            correo: correoLower,
-            nombre: correoLower.split('@')[0],
-          };
-
-          localStorage.setItem('usuarioSession', JSON.stringify(session));
-          console.log('✅ Sesión temporal guardada. El endpoint del servidor estará disponible pronto.');
-          
-          return {
-            success: true,
-            session,
-            message: 'Sesión iniciada correctamente (modo temporal - el servidor está actualizándose)',
-          };
+          // Si el servidor no está disponible, no crear sesión local
+          // El usuario debe esperar a que el servidor esté disponible
+          throw new Error('El servidor no está disponible en este momento. Por favor, intenta nuevamente en unos minutos.');
         }
         
         // Si es error 500, puede ser que el servidor esté caído
@@ -126,20 +120,33 @@ export const usuarioAuthService = {
   },
 
   logout: () => {
-    localStorage.removeItem('usuarioSession');
+    // Limpiar sessionStorage (no localStorage)
+    sessionStorage.removeItem('usuario_token');
+    sessionStorage.removeItem('usuario_user');
   },
 
   getCurrentSession: (): UsuarioSession | null => {
-    const sessionStr = localStorage.getItem('usuarioSession');
-    if (!sessionStr) return null;
+    // Obtener usuario de sessionStorage (no localStorage)
+    const userStr = sessionStorage.getItem('usuario_user');
+    if (!userStr) return null;
     try {
-      return JSON.parse(sessionStr);
+      const user = JSON.parse(userStr);
+      return {
+        id_usuario: user.id_usuario,
+        correo: user.correo,
+        nombre: user.nombre,
+      };
     } catch {
       return null;
     }
   },
 
+  getToken: (): string | null => {
+    return sessionStorage.getItem('usuario_token');
+  },
+
   isAuthenticated: (): boolean => {
-    return !!localStorage.getItem('usuarioSession');
+    // Verificar que exista el token en sessionStorage
+    return !!sessionStorage.getItem('usuario_token');
   },
 };

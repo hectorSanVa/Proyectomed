@@ -3,7 +3,7 @@ import api from "./api";
 import { AxiosError } from "axios";
 import type { User, LoginCredentials, LoginResponse } from "../types";
 
-// Definir claves para localStorage
+// Definir claves para sessionStorage (no localStorage - más profesional)
 const ADMIN_TOKEN_KEY = "admin_token";
 const ADMIN_USER_KEY = "admin_user";
 
@@ -21,9 +21,10 @@ export const authService = {
       const { data } = response;
 
       if (data.success && data.token && data.user) {
-        // 1. Guardar el TOKEN en localStorage
-        localStorage.setItem(ADMIN_TOKEN_KEY, data.token); // 2. Guardar el USUARIO en localStorage
-        localStorage.setItem(ADMIN_USER_KEY, JSON.stringify(data.user));
+        // 1. Guardar el TOKEN en sessionStorage (se limpia al cerrar navegador)
+        sessionStorage.setItem(ADMIN_TOKEN_KEY, data.token);
+        // 2. Guardar el USUARIO en sessionStorage
+        sessionStorage.setItem(ADMIN_USER_KEY, JSON.stringify(data.user));
       }
       return data;
 
@@ -42,18 +43,19 @@ export const authService = {
    */,
 
   logout: () => {
-    localStorage.removeItem(ADMIN_USER_KEY);
-    localStorage.removeItem(ADMIN_TOKEN_KEY); // Opcional: Redirigir al login para asegurar que todo el estado se limpie
+    sessionStorage.removeItem(ADMIN_USER_KEY);
+    sessionStorage.removeItem(ADMIN_TOKEN_KEY);
+    // Opcional: Redirigir al login para asegurar que todo el estado se limpie
     if (window.location.pathname !== "/admin/login") {
       window.location.href = "/admin/login";
     }
   }
   /**
-   * MODIFICADO: Lee el usuario de su nueva clave
+   * MODIFICADO: Lee el usuario de sessionStorage
    */,
 
   getCurrentUser: (): User | null => {
-    const userStr = localStorage.getItem(ADMIN_USER_KEY);
+    const userStr = sessionStorage.getItem(ADMIN_USER_KEY);
     if (!userStr) return null;
     try {
       return JSON.parse(userStr);
@@ -67,7 +69,7 @@ export const authService = {
    */,
 
   verifySession: async (): Promise<User | null> => {
-    const token = localStorage.getItem(ADMIN_TOKEN_KEY);
+    const token = sessionStorage.getItem(ADMIN_TOKEN_KEY);
 
     if (!token) {
       // No hay token, no hay sesión
@@ -82,8 +84,8 @@ export const authService = {
       if (response.data.success && response.data.user) {
         // El token es válido, el backend nos devuelve los datos del usuario
         // (ej. { id: 1, rol: 'admin' })
-        // Actualizamos el usuario en localStorage con los datos frescos
-        localStorage.setItem(
+        // Actualizamos el usuario en sessionStorage con los datos frescos
+        sessionStorage.setItem(
           ADMIN_USER_KEY,
           JSON.stringify(response.data.user)
         );
@@ -94,17 +96,18 @@ export const authService = {
       // <-- También aplicamos el tipo aquí
       // El token es inválido o expiró.
       const axiosError = error as AxiosError;
-      console.error("Fallo al verificar la sesión:", axiosError.message); // Nos aseguramos de limpiar por si acaso
-      localStorage.removeItem(ADMIN_USER_KEY);
-      localStorage.removeItem(ADMIN_TOKEN_KEY);
+      console.error("Fallo al verificar la sesión:", axiosError.message);
+      // Nos aseguramos de limpiar por si acaso
+      sessionStorage.removeItem(ADMIN_USER_KEY);
+      sessionStorage.removeItem(ADMIN_TOKEN_KEY);
       return null;
     }
   },
   /**
-   * MODIFICADO: Ahora verifica el TOKEN, no el usuario.
+   * MODIFICADO: Ahora verifica el TOKEN en sessionStorage, no localStorage.
    */
 
   isAuthenticated: (): boolean => {
-    return !!localStorage.getItem(ADMIN_TOKEN_KEY);
+    return !!sessionStorage.getItem(ADMIN_TOKEN_KEY);
   },
 };

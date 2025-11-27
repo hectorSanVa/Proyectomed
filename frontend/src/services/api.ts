@@ -10,11 +10,17 @@ const api = axios.create({
 // Interceptor para agregar headers (excepto para FormData)
 api.interceptors.request.use(
   (config) => {
-    const token = localStorage.getItem("admin_token");
+    // Prioridad: token de admin primero, luego token de usuario regular
+    const adminToken = sessionStorage.getItem("admin_token");
+    const usuarioToken = sessionStorage.getItem("usuario_token");
 
-    // Si el token existe, adjuntarlo a la cabecera de Authorization
-    if (token) {
-      config.headers["Authorization"] = `Bearer ${token}`;
+    // Si existe token de admin, usarlo (para rutas de admin)
+    if (adminToken) {
+      config.headers["Authorization"] = `Bearer ${adminToken}`;
+    } 
+    // Si no hay token de admin pero hay token de usuario, usarlo (para rutas de usuario)
+    else if (usuarioToken) {
+      config.headers["Authorization"] = `Bearer ${usuarioToken}`;
     }
     // Si no es FormData, agregar Content-Type JSON
     if (!(config.data instanceof FormData)) {
@@ -36,15 +42,24 @@ api.interceptors.response.use(
       (error.response.status === 401 || error.response.status === 403)
     ) {
       // Si el error es 401, podría ser un token expirado.
-      // Borramos el token para forzar un nuevo login.
+      // Borramos los tokens para forzar un nuevo login.
       if (error.response.status === 401) {
-        console.warn("Token inválido o expirado. Limpiando token.");
-        localStorage.removeItem("admin_token");
+        console.warn("Token inválido o expirado. Limpiando tokens.");
+        sessionStorage.removeItem("admin_token");
+        sessionStorage.removeItem("admin_user");
+        sessionStorage.removeItem("usuario_token");
+        sessionStorage.removeItem("usuario_user");
 
-        // Redirigir al login si no estamos ya en él
-        if (window.location.pathname !== "/admin/login") {
-          // Usamos window.location para forzar recarga, limpiando el estado de React.
-          window.location.href = "/admin/login";
+        // Redirigir al login apropiado según la ruta
+        const currentPath = window.location.pathname;
+        if (currentPath.startsWith("/admin")) {
+          if (currentPath !== "/admin/login") {
+            window.location.href = "/admin/login";
+          }
+        } else {
+          if (currentPath !== "/login") {
+            window.location.href = "/login";
+          }
         }
       }
       // Si es 403 (Prohibido), solo logueamos, no borramos el token

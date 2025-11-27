@@ -222,9 +222,9 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
       // El folio y la asociación con el usuario (si no es anónimo) ya se guardaron en la base de datos
       // Si la comunicación NO es anónima, el backend creó/obtuvo el usuario en la tabla usuarios
       // y asoció la comunicación mediante id_usuario
-      // Solo guardamos el último folio en localStorage para referencia rápida (opcional)
+      // Solo guardamos el último folio en sessionStorage para referencia rápida (opcional)
       try {
-        localStorage.setItem('ultimo_folio', comunicacion.folio);
+        sessionStorage.setItem('ultimo_folio', comunicacion.folio);
         if (esAnonimo) {
           console.log('✅ Comunicación anónima guardada. Folio:', comunicacion.folio);
         } else {
@@ -232,7 +232,7 @@ const FormularioPublico = ({ withoutLayout = false }: FormularioPublicoProps = {
           console.log('✅ Usuario creado/obtenido en la tabla usuarios para seguimiento');
         }
       } catch (err) {
-        console.warn('⚠️ Error al guardar último folio en localStorage:', err);
+        console.warn('⚠️ Error al guardar último folio en sessionStorage:', err);
       }
 
       // Contador regresivo y redirección

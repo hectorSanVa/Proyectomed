@@ -50,10 +50,16 @@ export const comunicacionService = {
     return response.data;
   },
 
-  // Obtener comunicaciones por correo
+  // Obtener comunicaciones por correo (usando URL parameter)
   getByCorreo: async (correo: string) => {
     const correoEncoded = encodeURIComponent(correo);
     const response = await api.get(`${API_ENDPOINTS.comunicaciones}/correo/${correoEncoded}`);
+    return response.data;
+  },
+
+  // Obtener mis comunicaciones (el correo se obtiene del token JWT - más seguro)
+  getMisComunicaciones: async () => {
+    const response = await api.post(`${API_ENDPOINTS.comunicaciones}/mis-comunicaciones`);
     return response.data;
   },
 

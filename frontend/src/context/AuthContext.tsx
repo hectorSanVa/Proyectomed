@@ -41,7 +41,7 @@ export const AuthProvider = ({ children }: { children: ReactNode }) => {
   }, []);
 
   const login = async (username: string, password: string) => {
-    // 1. 'authService.login' ya guarda el token y el user en localStorage
+    // 1. 'authService.login' ya guarda el token y el user en sessionStorage
     const response = await authService.login({ username, password });
 
     // 2. Verificamos que 'success' sea true Y que 'user' exista

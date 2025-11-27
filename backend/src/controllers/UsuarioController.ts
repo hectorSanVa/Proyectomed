@@ -1,5 +1,8 @@
 import { Request, Response } from "express";
 import { UsuarioService } from "../services/UsuarioService";
+import jwt from "jsonwebtoken";
+
+const JWT_SECRET = process.env.JWT_SECRET || 'tu_secret_key_muy_segura_aqui';
 
 export class UsuarioController {
   static async getAll(req: Request, res: Response) {
@@ -100,10 +103,22 @@ export class UsuarioController {
         nombre: usuario.nombre,
       });
 
-      // Retornar sesión con información del usuario
+      // Crear JWT token para el usuario (igual que los admins)
+      const payload = {
+        id_usuario: usuario.id_usuario,
+        correo: usuario.correo,
+        tipo: 'usuario' // Distinguir de tokens de admin
+      };
+
+      const token = jwt.sign(payload, JWT_SECRET, {
+        expiresIn: '24h', // Token válido por 24 horas
+      });
+
+      // Retornar token JWT y información del usuario (sin usar localStorage)
       const response = {
         success: true,
-        session: {
+        token: token, // Token JWT para enviar en las peticiones
+        user: {
           id_usuario: usuario.id_usuario,
           correo: usuario.correo,
           nombre: usuario.nombre || correoLower.split('@')[0],
@@ -111,7 +126,7 @@ export class UsuarioController {
         message: "Sesión iniciada correctamente",
       };
       
-      console.log('✅ Enviando respuesta:', response);
+      console.log('✅ Enviando respuesta con token JWT');
       res.json(response);
     } catch (error: any) {
       console.error('❌ Error en login de usuario:', error);

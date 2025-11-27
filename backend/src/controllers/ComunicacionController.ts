@@ -75,6 +75,13 @@ export class ComunicacionController {
   static async getByUsuario(req: Request, res: Response) {
     try {
       const idUsuario = Number(req.params.idUsuario);
+      
+      // Verificar que el usuario autenticado solo pueda ver sus propias comunicaciones
+      const usuarioAuth = (req as any).usuario;
+      if (usuarioAuth && usuarioAuth.id_usuario !== idUsuario) {
+        return res.status(403).json({ error: "No tienes permiso para ver estas comunicaciones" });
+      }
+      
       const data = await ComunicacionService.getByUsuarioId(idUsuario);
       res.json(data);
     } catch (error) {
@@ -88,7 +95,43 @@ export class ComunicacionController {
       if (!correo || !correo.includes('@')) {
         return res.status(400).json({ error: "Correo electrónico inválido" });
       }
-      const data = await ComunicacionService.getByCorreo(correo);
+      
+      // Validar que sea correo institucional UNACH
+      const correoLower = correo.toLowerCase();
+      if (!correoLower.includes('@unach.mx') && !correoLower.includes('@unach.edu.mx')) {
+        return res.status(400).json({ error: "Correo electrónico debe ser institucional de la UNACH" });
+      }
+      
+      // Verificar que el usuario autenticado solo pueda ver sus propias comunicaciones
+      const usuarioAuth = (req as any).usuario;
+      if (usuarioAuth && usuarioAuth.correo !== correoLower) {
+        return res.status(403).json({ error: "No tienes permiso para ver estas comunicaciones" });
+      }
+      
+      const data = await ComunicacionService.getByCorreo(correoLower);
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
+  /**
+   * Endpoint alternativo: Obtener comunicaciones del usuario actual
+   * Recibe el correo en el body (más seguro que en la URL)
+   * El frontend debe enviar el correo de la sesión del usuario
+   */
+  static async getMisComunicaciones(req: Request, res: Response) {
+    try {
+      // Obtener correo del usuario autenticado desde el token JWT
+      const usuarioAuth = (req as any).usuario;
+      if (!usuarioAuth || !usuarioAuth.correo) {
+        return res.status(401).json({ error: "Usuario no autenticado" });
+      }
+      
+      const correoLower = usuarioAuth.correo.toLowerCase();
+      
+      // El correo del token ya está validado, usar directamente
+      const data = await ComunicacionService.getByCorreo(correoLower);
       res.json(data);
     } catch (error) {
       res.status(500).json({ error: (error as Error).message });

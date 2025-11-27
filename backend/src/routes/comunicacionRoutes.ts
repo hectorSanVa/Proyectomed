@@ -1,7 +1,7 @@
 import { Router } from "express";
 import { ComunicacionController } from "../controllers/ComunicacionController";
 // --- 1. Importar middlewares ---
-import { isAuthenticated, hasRole } from "../middlewares/authMiddleware";
+import { isAuthenticated, hasRole, isUsuarioAuthenticated } from "../middlewares/authMiddleware";
 
 const router = Router();
 
@@ -11,9 +11,15 @@ router.post("/", ComunicacionController.create);
 // El público puede ver reconocimientos públicos
 router.get("/reconocimientos/publicos", ComunicacionController.getReconocimientosPublicos);
 // El usuario puede ver sus propias comunicaciones (para la pág. "Mis Seguimientos")
-router.get("/usuario/:idUsuario", ComunicacionController.getByUsuario);
+// Protegido: requiere token JWT de usuario regular
+router.get("/usuario/:idUsuario", isUsuarioAuthenticated, ComunicacionController.getByUsuario);
 // El usuario puede ver sus comunicaciones por correo (para la pág. "Mis Seguimientos")
-router.get("/correo/:correo", ComunicacionController.getByCorreo);
+// El correo viene en la URL pero el frontend lo obtiene de la sesión del usuario
+// Protegido: requiere token JWT de usuario regular
+router.get("/correo/:correo", isUsuarioAuthenticated, ComunicacionController.getByCorreo);
+// Endpoint alternativo: obtener comunicaciones del usuario actual (envía correo en body)
+// Protegido: requiere token JWT de usuario regular
+router.post("/mis-comunicaciones", isUsuarioAuthenticated, ComunicacionController.getMisComunicaciones);
 // El público puede consultar por folio
 router.get("/folio", ComunicacionController.getByFolio);
 
