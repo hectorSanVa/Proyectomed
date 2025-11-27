@@ -95,8 +95,8 @@ const SeguimientoPage = () => {
       
       // 3. Obtener estados y seguimientos para cada comunicación
       const estados = await estadoService.getAll();
-      const comunicacionesConEstado = await Promise.all(
-        comunicacionesUsuario.map(async (com: Comunicacion) => {
+      const comunicacionesConEstado: (ComunicacionConEstado | null)[] = await Promise.all(
+        comunicacionesUsuario.map(async (com: Comunicacion): Promise<ComunicacionConEstado | null> => {
           try {
             // Obtener estado del seguimiento
             try {
@@ -122,11 +122,9 @@ const SeguimientoPage = () => {
       );
       
       // Filtrar nulos y ordenar por fecha (más recientes primero)
-      const comunicacionesValidas: ComunicacionConEstado[] = comunicacionesConEstado
-        .filter((com): com is ComunicacionConEstado => {
-          return com !== null && com !== undefined;
-        })
-        .sort((a: ComunicacionConEstado, b: ComunicacionConEstado) => {
+      const comunicacionesValidas = comunicacionesConEstado
+        .filter((com): com is ComunicacionConEstado => com !== null && com !== undefined)
+        .sort((a, b) => {
           const fechaA = a.fecha_recepcion ? new Date(a.fecha_recepcion).getTime() : 0;
           const fechaB = b.fecha_recepcion ? new Date(b.fecha_recepcion).getTime() : 0;
           return fechaB - fechaA;
