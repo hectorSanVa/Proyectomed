@@ -140,6 +140,11 @@
   }
 }
 
+/* Desktop: sidebar siempre visible */
+.admin-sidebar {
+  transform: translateX(0);
+}
+
 /* Móviles (hasta 768px) */
 @media (max-width: 768px) {
   .admin-sidebar {

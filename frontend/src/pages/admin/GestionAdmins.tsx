@@ -2,11 +2,10 @@ import React, { useState, useEffect } from 'react';
 import { usePageTitle } from '../../hooks/usePageTitle';
 import AdminLayout from '../../components/admin/AdminLayout';
 import { adminUserService } from '../../services/adminUserService';
-// --- 1. Corregido: 'AdminRol' eliminado ---
 import type { User } from '../../types';
 import ConfirmModal from '../../components/common/ConfirmModal';
-// --- 2. Corregido: Importación con llaves {} ---
 import { SkeletonLoader } from '../../components/common/SkeletonLoader';
+import { MdAdd, MdEdit, MdDelete, MdPerson } from 'react-icons/md';
 import './GestionAdmins.css'; 
 
 // Estado inicial para un formulario (lo usaremos para crear/editar)
@@ -128,9 +127,13 @@ const GestionAdmins: React.FC = () => {
     <AdminLayout>
       <div className="gestion-admins-container admin-page-content">
       <header className="admin-page-header">
-        <h1>Gestión de Usuarios Administrativos</h1>
+        <div className="header-title">
+          <MdPerson className="header-icon" />
+          <h1>Gestión de Usuarios Administrativos</h1>
+        </div>
         <button className="btn btn-primary" onClick={handleOpenCreateModal}>
-          <i className="fas fa-plus"></i> Crear Nuevo Usuario
+          <MdAdd />
+          <span>Crear Nuevo Usuario</span>
         </button>
       </header>
 
@@ -155,12 +158,22 @@ const GestionAdmins: React.FC = () => {
                   <td>{user.nombre}</td>
                   <td>{user.rol}</td>
                   <td>
-                    <button className="btn btn-sm btn-warning" onClick={() => handleOpenEditModal(user)}>
-                      <i className="fas fa-edit"></i>
-                    </button>
-                    <button className="btn btn-sm btn-danger" onClick={() => handleOpenDeleteModal(user)}>
-                      <i className="fas fa-trash"></i>
-                    </button>
+                    <div className="table-actions">
+                      <button 
+                        className="btn-icon btn-edit" 
+                        onClick={() => handleOpenEditModal(user)}
+                        title="Editar"
+                      >
+                        <MdEdit />
+                      </button>
+                      <button 
+                        className="btn-icon btn-delete" 
+                        onClick={() => handleOpenDeleteModal(user)}
+                        title="Eliminar"
+                      >
+                        <MdDelete />
+                      </button>
+                    </div>
                   </td>
                 </tr>
               ))}
@@ -181,10 +194,13 @@ const GestionAdmins: React.FC = () => {
 
       {/* Modal de Creación/Edición */}
       {isModalOpen && (
-        <div className="modal-overlay">
-          <div className="modal-content">
-            <h2>{isEditing ? 'Editar' : 'Crear'} Usuario</h2>
-            <form onSubmit={handleSubmit}>
+        <div className="modal-overlay" onClick={handleCloseModal}>
+          <div className="modal-content" onClick={(e) => e.stopPropagation()}>
+            <div className="modal-header">
+              <h2>{isEditing ? 'Editar' : 'Crear'} Usuario</h2>
+              <button className="modal-close" onClick={handleCloseModal}>×</button>
+            </div>
+            <form onSubmit={handleSubmit} className="admin-form">
               <div className="form-group">
                 <label>Username</label>
                 <input
