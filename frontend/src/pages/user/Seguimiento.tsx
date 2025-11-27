@@ -37,24 +37,57 @@ const SeguimientoPage = () => {
     setLoading(true);
     setError(null);
     try {
-      // Sistema profesional: usar la tabla usuarios existente
-      // 1. Buscar usuario por correo
-      const usuario = await usuarioService.getByCorreo(session.correo);
+      // Estrategia múltiple para encontrar todas las comunicaciones del usuario
+      // 1. Buscar usuario por correo para obtener id_usuario
+      let comunicacionesUsuario: Comunicacion[] = [];
+      let usuario = null;
       
-      if (!usuario || !usuario.id_usuario) {
-        console.log('ℹ️ No se encontró usuario para este correo');
-        setComunicaciones([]);
-        setLoading(false);
-        return;
+      try {
+        usuario = await usuarioService.getByCorreo(session.correo);
+      } catch (err) {
+        console.warn('⚠️ No se pudo obtener usuario por correo:', err);
       }
       
-      // 2. Obtener comunicaciones del usuario usando id_usuario
-      const comunicacionesUsuario = await comunicacionService.getByUsuarioId(usuario.id_usuario);
+      // 2. Estrategia A: Buscar comunicaciones por id_usuario (si existe)
+      if (usuario && usuario.id_usuario) {
+        try {
+          const comunicacionesPorId = await comunicacionService.getByUsuarioId(usuario.id_usuario);
+          comunicacionesUsuario = [...comunicacionesUsuario, ...comunicacionesPorId];
+          console.log(`✅ Encontradas ${comunicacionesPorId.length} comunicaciones por id_usuario`);
+        } catch (err) {
+          console.warn('⚠️ Error al buscar comunicaciones por id_usuario:', err);
+        }
+      }
       
-      console.log('🔄 Comunicaciones encontradas:', comunicacionesUsuario.length);
+      // 3. Estrategia B: Buscar comunicaciones directamente por correo (hace JOIN con usuarios)
+      // Esto encuentra comunicaciones incluso si fueron creadas antes de que el usuario iniciara sesión
+      try {
+        const comunicacionesPorCorreo = await comunicacionService.getByCorreo(session.correo);
+        // Combinar y eliminar duplicados por id_comunicacion
+        const comunicacionesMap = new Map<number, Comunicacion>();
+        
+        // Agregar las que ya teníamos
+        comunicacionesUsuario.forEach(com => {
+          if (com.id_comunicacion) {
+            comunicacionesMap.set(com.id_comunicacion, com);
+          }
+        });
+        
+        // Agregar las encontradas por correo
+        comunicacionesPorCorreo.forEach(com => {
+          if (com.id_comunicacion) {
+            comunicacionesMap.set(com.id_comunicacion, com);
+          }
+        });
+        
+        comunicacionesUsuario = Array.from(comunicacionesMap.values());
+        console.log(`✅ Total de comunicaciones únicas encontradas: ${comunicacionesUsuario.length}`);
+      } catch (err) {
+        console.warn('⚠️ Error al buscar comunicaciones por correo:', err);
+      }
       
       if (comunicacionesUsuario.length === 0) {
-        console.log('ℹ️ No se encontraron comunicaciones para este usuario');
+        console.log('ℹ️ No se encontraron comunicaciones para este correo');
         setComunicaciones([]);
         setLoading(false);
         return;

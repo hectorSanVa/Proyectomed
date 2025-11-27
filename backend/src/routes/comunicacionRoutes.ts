@@ -12,6 +12,8 @@ router.post("/", ComunicacionController.create);
 router.get("/reconocimientos/publicos", ComunicacionController.getReconocimientosPublicos);
 // El usuario puede ver sus propias comunicaciones (para la pág. "Mis Seguimientos")
 router.get("/usuario/:idUsuario", ComunicacionController.getByUsuario);
+// El usuario puede ver sus comunicaciones por correo (para la pág. "Mis Seguimientos")
+router.get("/correo/:correo", ComunicacionController.getByCorreo);
 // El público puede consultar por folio
 router.get("/folio", ComunicacionController.getByFolio);
 

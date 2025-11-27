@@ -10,7 +10,8 @@ import {
   MdHome,
   MdExitToApp,
   MdClose,
-  MdPeople, // <-- 1. (Opcional) Icono para 'Gestión de Admins'
+  MdPeople,
+  MdGroups, // Icono para Comisiones
 } from "react-icons/md";
 import { useAuth } from "../../context/AuthContext";
 import logoIzquierdo from "../../assets/img/logosuperiorizquiero.png";
@@ -122,6 +123,16 @@ const Sidebar = ({ isOpen = false, onClose }: SidebarProps) => {
         >
           <MdList className="nav-icon" />{" "}
           <span>Concentrado de Seguimiento</span>{" "}
+        </NavLink>
+        <NavLink
+          to="/admin/comisiones"
+          className={({ isActive }) =>
+            isActive ? "nav-item active" : "nav-item"
+          }
+          onClick={handleNavClick}
+        >
+          <MdGroups className="nav-icon" />{" "}
+          <span>Gestión de Comisiones</span>{" "}
         </NavLink>
         {/* --- 3. INICIO: Enlaces solo para 'admin' --- */}
         {/* Verificamos que 'user' exista y que 'user.rol' sea 'admin' */}

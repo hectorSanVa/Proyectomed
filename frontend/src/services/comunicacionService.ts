@@ -50,6 +50,13 @@ export const comunicacionService = {
     return response.data;
   },
 
+  // Obtener comunicaciones por correo
+  getByCorreo: async (correo: string) => {
+    const correoEncoded = encodeURIComponent(correo);
+    const response = await api.get(`${API_ENDPOINTS.comunicaciones}/correo/${correoEncoded}`);
+    return response.data;
+  },
+
   // Obtener reconocimientos públicos
   getReconocimientosPublicos: async () => {
     const response = await api.get(`${API_ENDPOINTS.comunicaciones}/reconocimientos/publicos`);

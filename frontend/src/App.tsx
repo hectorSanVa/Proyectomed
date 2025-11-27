@@ -22,6 +22,7 @@ import Reportes from "./pages/admin/Reportes";
 import ConcentradoSeguimiento from "./pages/admin/ConcentradoSeguimiento";
 import Configuracion from "./pages/admin/Configuracion";
 import GestionAdmins from "./pages/admin/GestionAdmins";
+import GestionComisiones from "./pages/admin/GestionComisiones";
 import "./App.css";
 
 function App() {
@@ -110,6 +111,14 @@ function App() {
                 element={
                   <ProtectedRoute roles={["admin"]}>
                     <GestionAdmins />
+                  </ProtectedRoute>
+                }
+              />
+              <Route
+                path="/admin/comisiones"
+                element={
+                  <ProtectedRoute>
+                    <GestionComisiones />
                   </ProtectedRoute>
                 }
               />

@@ -36,6 +36,35 @@ export class ComunicacionDAO {
     return result.rows;
   }
 
+  static async getByCorreo(correo: string): Promise<Comunicacion[]> {
+    console.log(`🔍 Buscando comunicaciones para correo: ${correo}`);
+    
+    // Buscar comunicaciones haciendo JOIN con la tabla usuarios
+    // Esto encuentra todas las comunicaciones asociadas a usuarios con ese correo
+    const result = await pool.query(
+      `SELECT DISTINCT c.* 
+       FROM comunicaciones c
+       INNER JOIN usuarios u ON c.id_usuario = u.id_usuario
+       WHERE LOWER(u.correo) = LOWER($1)
+       ORDER BY c.fecha_recepcion DESC`,
+      [correo]
+    );
+    
+    console.log(
+      `✅ Encontradas ${result.rows.length} comunicaciones para correo: ${correo}`
+    );
+    if (result.rows.length > 0) {
+      result.rows.forEach((com: any, idx: number) => {
+        console.log(
+          `  ${idx + 1}. Folio: ${com.folio}, Tipo: ${com.tipo}, id_usuario: ${
+            com.id_usuario
+          }`
+        );
+      });
+    }
+    return result.rows;
+  }
+
   static async getByFolio(folio: string): Promise<Comunicacion | null> {
     const result = await pool.query(
       "SELECT * FROM comunicaciones WHERE folio=$1",

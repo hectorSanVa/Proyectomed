@@ -82,6 +82,19 @@ export class ComunicacionController {
     }
   }
 
+  static async getByCorreo(req: Request, res: Response) {
+    try {
+      const correo = decodeURIComponent(req.params.correo);
+      if (!correo || !correo.includes('@')) {
+        return res.status(400).json({ error: "Correo electrónico inválido" });
+      }
+      const data = await ComunicacionService.getByCorreo(correo);
+      res.json(data);
+    } catch (error) {
+      res.status(500).json({ error: (error as Error).message });
+    }
+  }
+
   static async getByFolio(req: Request, res: Response) {
     try {
       const folio = req.query.folio as string || req.params.folio;

@@ -20,6 +20,10 @@ export class ComunicacionService {
     return await ComunicacionDAO.getByUsuarioId(idUsuario);
   }
 
+  static async getByCorreo(correo: string): Promise<Comunicacion[]> {
+    return await ComunicacionDAO.getByCorreo(correo);
+  }
+
   static async getByFolio(folio: string): Promise<Comunicacion | null> {
     return await ComunicacionDAO.getByFolio(folio);
   }
