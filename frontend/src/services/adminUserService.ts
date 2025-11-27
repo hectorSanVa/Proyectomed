@@ -1,6 +1,6 @@
 import api from './api';
 // Importamos los tipos que definimos en types/index.ts
-import type { User } from '../types';
+import type { User, AdminRol } from '../types';
 
 // --- Definimos los tipos para los payloads (datos que se envían) ---
 
@@ -12,16 +12,31 @@ export type UpdateAdminUserData = Partial<CreateAdminUserData>;
 
 // --- Definimos el servicio ---
 
+// Tipo que devuelve el backend (con id_admin)
+interface UsuarioAdminResponse {
+  id_admin: number;
+  username: string;
+  nombre: string;
+  rol: AdminRol;
+}
+
 export const adminUserService = {
   
   /**
    * Obtiene todos los usuarios administradores
    * Llama a: GET /api/admin/users
+   * Mapea id_admin del backend a id del frontend
    */
   async getAdminUsers(): Promise<User[]> {
     try {
-      const response = await api.get<User[]>('/api/admin/users');
-      return response.data;
+      const response = await api.get<UsuarioAdminResponse[]>('/api/admin/users');
+      // Mapear id_admin -> id para el frontend
+      return response.data.map(user => ({
+        id: user.id_admin,
+        username: user.username,
+        nombre: user.nombre,
+        rol: user.rol
+      }));
     } catch (error) {
       console.error('Error al obtener usuarios admin:', error);
       throw error;
@@ -31,11 +46,18 @@ export const adminUserService = {
   /**
    * Crea un nuevo usuario administrador
    * Llama a: POST /api/admin/users
+   * Mapea id_admin del backend a id del frontend
    */
   async createAdminUser(userData: CreateAdminUserData): Promise<User> {
     try {
-      const response = await api.post<User>('/api/admin/users', userData);
-      return response.data;
+      const response = await api.post<UsuarioAdminResponse>('/api/admin/users', userData);
+      // Mapear id_admin -> id para el frontend
+      return {
+        id: response.data.id_admin,
+        username: response.data.username,
+        nombre: response.data.nombre,
+        rol: response.data.rol
+      };
     } catch (error) {
       console.error('Error al crear usuario admin:', error);
       throw error;
@@ -45,11 +67,18 @@ export const adminUserService = {
   /**
    * Actualiza un usuario administrador
    * Llama a: PUT /api/admin/users/:id
+   * Mapea id_admin del backend a id del frontend
    */
   async updateAdminUser(id: number, userData: UpdateAdminUserData): Promise<User> {
     try {
-      const response = await api.put<User>(`/api/admin/users/${id}`, userData);
-      return response.data;
+      const response = await api.put<UsuarioAdminResponse>(`/api/admin/users/${id}`, userData);
+      // Mapear id_admin -> id para el frontend
+      return {
+        id: response.data.id_admin,
+        username: response.data.username,
+        nombre: response.data.nombre,
+        rol: response.data.rol
+      };
     } catch (error) {
       console.error('Error al actualizar usuario admin:', error);
       throw error;
