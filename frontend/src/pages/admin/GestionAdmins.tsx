@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePageTitle } from '../../hooks/usePageTitle';
+import AdminLayout from '../../components/admin/AdminLayout';
 import { adminUserService } from '../../services/adminUserService';
 // --- 1. Corregido: 'AdminRol' eliminado ---
 import type { User } from '../../types';
@@ -124,7 +125,8 @@ const GestionAdmins: React.FC = () => {
   };
 
   return (
-    <div className="gestion-admins-container admin-page-content">
+    <AdminLayout>
+      <div className="gestion-admins-container admin-page-content">
       <header className="admin-page-header">
         <h1>Gestión de Usuarios Administrativos</h1>
         <button className="btn btn-primary" onClick={handleOpenCreateModal}>
@@ -229,8 +231,8 @@ const GestionAdmins: React.FC = () => {
           </div>
         </div>
       )}
-
-    </div>
+      </div>
+    </AdminLayout>
   );
 };
 

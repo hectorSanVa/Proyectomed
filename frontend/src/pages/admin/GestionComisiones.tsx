@@ -1,5 +1,6 @@
 import React, { useState, useEffect } from 'react';
 import { usePageTitle } from '../../hooks/usePageTitle';
+import AdminLayout from '../../components/admin/AdminLayout';
 import { comisionService } from '../../services/comisionService';
 import type { Comision } from '../../types';
 import ConfirmModal from '../../components/common/ConfirmModal';
@@ -127,7 +128,8 @@ const GestionComisiones: React.FC = () => {
   };
 
   return (
-    <div className="gestion-comisiones-container admin-page-content">
+    <AdminLayout>
+      <div className="gestion-comisiones-container admin-page-content">
       <header className="admin-page-header">
         <div className="header-title">
           <MdPeople className="header-icon" />
@@ -304,7 +306,8 @@ const GestionComisiones: React.FC = () => {
           </div>
         </div>
       )}
-    </div>
+      </div>
+    </AdminLayout>
   );
 };
 
