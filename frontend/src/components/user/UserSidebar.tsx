@@ -6,7 +6,6 @@ import {
   MdStar, 
   MdEmail,
   MdLogin,
-  MdPersonAdd,
   MdSearch,
   MdClose
 } from 'react-icons/md';

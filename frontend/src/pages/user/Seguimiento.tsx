@@ -74,7 +74,7 @@ const SeguimientoPage = () => {
         });
         
         // Agregar las encontradas por correo
-        comunicacionesPorCorreo.forEach(com => {
+        comunicacionesPorCorreo.forEach((com: Comunicacion) => {
           if (com.id_comunicacion) {
             comunicacionesMap.set(com.id_comunicacion, com);
           }
@@ -122,9 +122,11 @@ const SeguimientoPage = () => {
       );
       
       // Filtrar nulos y ordenar por fecha (más recientes primero)
-      const comunicacionesValidas = comunicacionesConEstado
-        .filter((com): com is ComunicacionConEstado => com !== null)
-        .sort((a, b) => {
+      const comunicacionesValidas: ComunicacionConEstado[] = comunicacionesConEstado
+        .filter((com): com is ComunicacionConEstado => {
+          return com !== null && com !== undefined;
+        })
+        .sort((a: ComunicacionConEstado, b: ComunicacionConEstado) => {
           const fechaA = a.fecha_recepcion ? new Date(a.fecha_recepcion).getTime() : 0;
           const fechaB = b.fecha_recepcion ? new Date(b.fecha_recepcion).getTime() : 0;
           return fechaB - fechaA;
