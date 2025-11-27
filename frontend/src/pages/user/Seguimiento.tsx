@@ -73,7 +73,7 @@ const SeguimientoPage = () => {
           }
         });
         
-        // Agregar las encontradas por correo
+        // Agregar las encontradas por correo (tipo explícito para TypeScript)
         comunicacionesPorCorreo.forEach((com: Comunicacion) => {
           if (com.id_comunicacion) {
             comunicacionesMap.set(com.id_comunicacion, com);
@@ -122,7 +122,8 @@ const SeguimientoPage = () => {
       );
       
       // Filtrar nulos y ordenar por fecha (más recientes primero)
-      const comunicacionesSinNull = comunicacionesConEstado.filter(
+      // Separado en dos pasos para mejor inferencia de tipos TypeScript
+      const comunicacionesSinNull: ComunicacionConEstado[] = comunicacionesConEstado.filter(
         (com): com is ComunicacionConEstado => com !== null && com !== undefined
       );
       

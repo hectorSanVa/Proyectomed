@@ -8,7 +8,7 @@ import {
   MdLogin,
   MdSearch,
   MdClose
-} from 'react-icons/md';
+} from 'react-icons/md'; // Imports corregidos - MdPersonAdd eliminado
 import { useUsuarioAuth } from '../../context/UsuarioAuthContext';
 import logoIzquierdo from '../../assets/img/logosuperiorizquiero.png';
 import './UserSidebar.css';
