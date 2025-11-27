@@ -122,13 +122,17 @@ const SeguimientoPage = () => {
       );
       
       // Filtrar nulos y ordenar por fecha (más recientes primero)
-      const comunicacionesValidas = comunicacionesConEstado
-        .filter((com): com is ComunicacionConEstado => com !== null && com !== undefined)
-        .sort((a, b) => {
+      const comunicacionesSinNull = comunicacionesConEstado.filter(
+        (com): com is ComunicacionConEstado => com !== null && com !== undefined
+      );
+      
+      const comunicacionesValidas: ComunicacionConEstado[] = comunicacionesSinNull.sort(
+        (a: ComunicacionConEstado, b: ComunicacionConEstado) => {
           const fechaA = a.fecha_recepcion ? new Date(a.fecha_recepcion).getTime() : 0;
           const fechaB = b.fecha_recepcion ? new Date(b.fecha_recepcion).getTime() : 0;
           return fechaB - fechaA;
-        }) as ComunicacionConEstado[];
+        }
+      );
       
       console.log('✅ Comunicaciones procesadas con estados:', comunicacionesValidas.length);
       setComunicaciones(comunicacionesValidas);
