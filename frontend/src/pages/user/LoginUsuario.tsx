@@ -33,8 +33,8 @@ const LoginUsuario = () => {
     <UserLayout>
       <div className="login-usuario-container">
         <div className="login-card">
-          <h1>Iniciar Sesión</h1>
-          <p className="login-subtitle">Ingresa tu correo electrónico para acceder al formulario</p>
+          <h1>Acceso al Sistema</h1>
+          <p className="login-subtitle">Ingresa tu correo institucional UNACH para acceder a tus comunicaciones y seguimiento</p>
 
           {error && (
             <div className="error-message">
@@ -66,8 +66,11 @@ const LoginUsuario = () => {
 
           <div className="login-footer">
             <p className="login-info">
-              Ingresa tu correo institucional de la UNACH (@unach.mx o @unach.edu.mx) para acceder al sistema.
-              También puedes enviar comunicaciones de forma anónima sin iniciar sesión.
+              <strong>¿Cómo funciona?</strong><br />
+              Solo necesitas tu correo institucional de la UNACH (@unach.mx o @unach.edu.mx). 
+              El sistema automáticamente te identificará y podrás ver todas tus comunicaciones enviadas.
+              <br /><br />
+              <strong>Nota:</strong> También puedes enviar comunicaciones de forma completamente anónima sin iniciar sesión desde el formulario público.
             </p>
             <p className="admin-link">
               <Link to="/admin/login">Acceso Administrativo</Link>

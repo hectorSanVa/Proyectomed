@@ -98,16 +98,10 @@ const UserSidebar = ({ isOpen = false, onClose }: UserSidebarProps) => {
             </button>
           </>
         ) : (
-          <>
-            <NavLink to="/login" className="nav-item" onClick={handleNavClick}>
-              <MdLogin className="nav-icon" />
-              <span>Iniciar Sesión</span>
-            </NavLink>
-            <NavLink to="/register" className="nav-item" onClick={handleNavClick}>
-              <MdPersonAdd className="nav-icon" />
-              <span>Registrarse</span>
-            </NavLink>
-          </>
+          <NavLink to="/login" className="nav-item" onClick={handleNavClick}>
+            <MdLogin className="nav-icon" />
+            <span>Iniciar Sesión</span>
+          </NavLink>
         )}
       </div>
     </aside>

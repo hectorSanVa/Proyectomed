@@ -8,7 +8,6 @@ import FormularioPublico from "./pages/FormularioPublico";
 import ConsultaFolio from "./pages/ConsultaFolio";
 import Login from "./pages/Login";
 import LoginUsuario from "./pages/user/LoginUsuario";
-import RegisterUsuario from "./pages/user/RegisterUsuario";
 import Buzon from "./pages/user/Buzon";
 import SeguimientoPage from "./pages/user/Seguimiento";
 import Reconocimientos from "./pages/user/Reconocimientos";
@@ -39,7 +38,8 @@ function App() {
 
               {/* Rutas de autenticación */}
               <Route path="/login" element={<LoginUsuario />} />
-              <Route path="/register" element={<RegisterUsuario />} />
+              {/* Redirigir /register a /login ya que no se necesita registro separado */}
+              <Route path="/register" element={<LoginUsuario />} />
               <Route path="/admin/login" element={<Login />} />
 
               {/* Rutas de usuario */}

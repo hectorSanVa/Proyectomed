@@ -209,26 +209,26 @@ const Buzon = () => {
           </div>
 
           <div className="acceso-requerido-card">
-            <h2>Acceso Requerido</h2>
-            <h3>Iniciar Sesión Requerido</h3>
-            <p>Para enviar quejas, sugerencias o reconocimientos, necesitas iniciar sesión en el sistema.</p>
+            <h2>Acceso al Sistema</h2>
+            <h3>Iniciar Sesión</h3>
+            <p>Para enviar quejas, sugerencias o reconocimientos y darles seguimiento, inicia sesión con tu correo institucional UNACH.</p>
             <div className="acceso-buttons">
               <button 
                 className="btn-primary-acceso"
                 onClick={() => navigate('/login')}
               >
-                Iniciar Sesión
+                Iniciar Sesión con Correo UNACH
               </button>
               <button 
                 className="btn-secondary-acceso"
-                onClick={() => navigate('/register')}
+                onClick={() => navigate('/formulario')}
               >
-                Registrarse
+                Enviar Anónimamente (Sin sesión)
               </button>
             </div>
             <div className="acceso-links">
-              <p>¿Ya tienes una cuenta? <span onClick={() => navigate('/login')}>Inicia sesión aquí</span></p>
-              <p>¿No tienes cuenta? <span onClick={() => navigate('/register')}>Regístrate aquí</span></p>
+              <p><strong>¿Cómo funciona?</strong> Solo necesitas tu correo institucional (@unach.mx o @unach.edu.mx). No necesitas crear cuenta, el sistema te identificará automáticamente.</p>
+              <p>¿Prefieres no iniciar sesión? <span onClick={() => navigate('/formulario')}>Puedes enviar comunicaciones de forma anónima</span></p>
             </div>
           </div>
         </div>
